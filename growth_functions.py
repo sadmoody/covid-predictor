@@ -8,3 +8,6 @@ def poly_four(x, a, b, c, d, e):
 
 def poly_three(x, a, b, c, d):
     return a * np.power(x, 3) + b * np.power(x, 2) + c * x + d
+
+def poly_three_dx(x, a, b, c, d):
+    return 3 * a * np.power(x, 2) + 2 * b * x + c

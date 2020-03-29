@@ -52,3 +52,7 @@ for country in formulas:
         plt.plot(np.linspace(-6,21), GRAPH_SHAPE(np.linspace(-6,21), *(current['popt'])), 'r-', label='fit: a=%5.3f, b=%5.3f, c=%5.3f, d=%5.3f' % tuple(popt))
         plt.plot(current['x'], current['confirmed'], 'b-', label='data')
         plt.show()
+
+        # Derivative (Rate of new daily confirmed cases)
+        plt.plot(np.linspace(-6,21), growth_functions.poly_three_dx(np.linspace(0,today_x+2), *(current['popt'])), 'r-', label='fit: a=%5.3f, b=%5.3f, c=%5.3f, d=%5.3f' % tuple(popt))
+        plt.show()
