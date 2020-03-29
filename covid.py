@@ -6,13 +6,17 @@ import os
 from glob import glob
 import growth_functions
 import datetime
+import httplib2
+
 
 START_DATE = datetime.datetime.now().date() - datetime.timedelta(days=15)
 END_DATE = START_DATE + datetime.timedelta(days=14)
 GRAPH_SHAPE = growth_functions.poly_three
 
 # Reading CSV
-df = pd.read_csv('csse-confirmed.csv')
+# h = httplib2.Http(".cache")
+# resp, content = h.request("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", "GET")
+df = pd.read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
 
 #Cleaning up of columns
 df.rename(columns={'Country/Region':'Country'}, inplace=True)
