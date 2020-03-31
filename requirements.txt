@@ -4,3 +4,6 @@ scipy
 numpy
 pandas
 apscheduler
+djangorestframework
+markdown
+django-filter
