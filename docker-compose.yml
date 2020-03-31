@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - PGDATA=/tmp
+    volumes:
+      - pgdata:/var/lib/postgresql/data/pgdata
+  web:
+    build: .
+    command: python manage.py runserver --noreload 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:

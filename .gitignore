@@ -1,2 +1,4 @@
-__pycache__
+__paycache__
 .cache
+migrations
+*.pyc
