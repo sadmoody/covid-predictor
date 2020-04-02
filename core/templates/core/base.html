@@ -14,7 +14,7 @@
 </style>
 </head>
 <body>
-<h1>MEGA T H I C C Progress!</h1>
+<h1>P O L Y MEGA T H I C C Progress!</h1>
 <div class="container" id="container"></div>
 
 <!-- <script src="https://cdn.rawgit.com/kimmobrunfeldt/progressbar.js/0.5.6/dist/progressbar.js"></script> -->
@@ -26,6 +26,11 @@
 
     function poly_three_dx(x, formula) {
         return 3 * formula.a * Math.pow(x, 2) + 2 * formula.b * x  + formula.c;
+    }
+
+    function bar_callback(bar, rate) {
+        bar.set(0.0);
+        bar.animate(1.0, {duration: rate}, function(){bar_callback(bar, rate)});
     }
 
     window.onload = function onLoad() {
@@ -78,7 +83,7 @@
                 var finish_time = current_rate - current_progress * current_rate;
                 // Do the bar thing.
                 bar.set(current_progress);
-                bar.animate(1.0, {duration: finish_time});
+                bar.animate(1.0, {duration: finish_time}, function(){bar_callback(bar, current_rate)});
             }); 
     };
 </script>
