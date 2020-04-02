@@ -1,0 +1,87 @@
+{% load static %}
+<html>
+<head>
+<script src="{% static "js/progressbar.js" %}"></script>
+<style>
+    .container {
+        height: 300px;
+    }
+
+    .container > svg {
+        height: 100%;
+        display: block;
+    }
+</style>
+</head>
+<body>
+<h1>MEGA T H I C C Progress!</h1>
+<div class="container" id="container"></div>
+
+<!-- <script src="https://cdn.rawgit.com/kimmobrunfeldt/progressbar.js/0.5.6/dist/progressbar.js"></script> -->
+<script>
+
+    function poly_three(x, formula) {
+        return formula.a * Math.pow(x, 3) + formula.b * Math.pow(x, 2)  + formula.c * x + formula.d;
+    }
+
+    function poly_three_dx(x, formula) {
+        return 3 * formula.a * Math.pow(x, 2) + 2 * formula.b * x  + formula.c;
+    }
+
+    window.onload = function onLoad() {
+        var bar = new ProgressBar.Line(container, {
+        strokeWidth: 4,
+        easing: 'linear',
+        duration: 2000,
+        color: '#FFEA82',
+        trailColor: '#eee',
+        trailWidth: 1,
+        svgStyle: {width: '100%', height: '100%'},
+        text: {
+            style: {
+            // Text color.
+            // Default: same as stroke color (options.color)
+            color: '#999',
+            position: 'absolute',
+            right: '0',
+            top: '30px',
+            padding: 0,
+            margin: 0,
+            transform: null
+            },
+            autoStyleContainer: false
+        },
+        from: {color: '#FFEA82'},
+        to: {color: '#ED6A5A'},
+        step: (state, bar) => {
+            bar.setText(Math.round(bar.value() * 100) + ' %');
+        }
+        });
+        fetch('http://localhost:8000/api/v1/countries/us')
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                // Find difference in time between last dataset update and now
+                var t_zero_array = data.t_zero.split('-').map(Number);
+                var current_date = new Date().getTime();
+                var t_zero = Date.UTC(t_zero_array[0], t_zero_array[1]-1, t_zero_array[2])
+                // Represent time in decimal days from last dataset update
+                var x = (current_date - t_zero) / 1000 / 3600 / 24;
+                // Get current number of cases by applying third order polynomial
+                var current_cases = poly_three(x, data.confirmed_formula);
+                // Get current fraction of cases (so that we can start our progress bar in the right place)
+                var current_progress = current_cases % 1;
+                // Period of new confirmed cases in ms
+                var current_rate = 1000 / (poly_three_dx(x, data.confirmed_formula) / 24 / 3600);
+                // Remaining time in progress bar until it reaches end of *current* case
+                var finish_time = current_rate - current_progress * current_rate;
+                // Do the bar thing.
+                bar.set(current_progress);
+                bar.animate(1.0, {duration: finish_time});
+            }); 
+    };
+</script>
+</body>
+
+</html>

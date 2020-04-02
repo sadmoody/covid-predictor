@@ -11,7 +11,7 @@ import logging
 def update_stats():
     logging.debug("Setting constants")
 
-    START_DATE = datetime.datetime.now().date() - datetime.timedelta(days=15)
+    START_DATE = datetime.datetime.now(datetime.timezone.utc).date() - datetime.timedelta(days=14)
     END_DATE = START_DATE + datetime.timedelta(days=14)
     GRAPH_SHAPE = poly_three
     date_range = pd.date_range(START_DATE, END_DATE) 
@@ -69,6 +69,7 @@ def update_stats():
                 # Oh my god this is so slow for new entries
                 entry_model = Entry.objects.create(date=index.date(), value=row['Confirmed'])
             country_model.confirmed.add(entry_model)
+        country_model.t_zero = START_DATE
         country_model.save()
     
     logging.debug("Done!")

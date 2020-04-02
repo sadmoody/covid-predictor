@@ -13,6 +13,7 @@ class Formula(models.Model):
 
 class Country(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    t_zero = models.DateField(default=datetime.date.today)
     confirmed = models.ManyToManyField(Entry, related_name="%(class)s_confirmed")
     confirmed_formula = models.ForeignKey(Formula, on_delete=models.CASCADE, null=True, related_name="%(class)s_country_confirmed")
     death = models.ManyToManyField(Entry, related_name="%(class)s_death")
