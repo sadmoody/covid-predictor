@@ -3,11 +3,49 @@
 <head>
 <script src="{% static "js/progressbar.js" %}"></script>
 <style>
-    .container {
-        height: 300px;
+    * {
+        position: relative;
     }
 
-    .container > svg {
+    .country {
+        border: 2px solid black;
+        display: inline-block;
+        height: 150px;
+        margin: 6px;
+        width: calc(25vw - 24px);
+    }
+
+    .country__container {
+        display: flex;
+    }
+
+    .country__info {
+        display: flex;
+        flex-direction: column;
+        margin: 8px 4px;
+        text-align: center;
+        width: 30%;
+    }
+
+    .country__info-emoji {
+        border: 2px solid black;
+        font-size: 60px;
+        margin-bottom: 6px;
+        padding: 4px;
+    }
+    
+    .country__data {
+        display: inline-block;
+        height: calc(100% - 16px);
+        margin: 8px 4px;
+        width: 65%;
+    }
+
+    .country__data-cases, .country__data-deaths {
+        height: 30px;
+    }
+
+    .country__data svg {
         height: 100%;
         display: block;
     }
@@ -15,76 +53,278 @@
 </head>
 <body>
 <h1>P O L Y MEGA T H I C C Progress!</h1>
-<div class="container" id="container"></div>
+<div id="container"></div>
+<template id="country-template">
+    <div class="country">
+        <div class="country__container">
+            <div class="country__info">
+                <div class="country__info-emoji"></div>
+                <div class="country__info-name"></div>
+            </div>
+            <div class="country__data">
+                <div class="country__data-cases"></div>
+                <div><span class="country__data-case-minutes"></span> case every <span class="country__data-case-rate"></span></div>
+                <!-- <div class="country__data-deaths">deaths todo</div>
+                <div><span class="country__data-death-minutes"></span> death every <span class="country__data-death-rate"></span></div> -->
+            </div>
+        </div>
+    </div>
+</template>
 
-<!-- <script src="https://cdn.rawgit.com/kimmobrunfeldt/progressbar.js/0.5.6/dist/progressbar.js"></script> -->
 <script>
+    const CONTAINER = document.querySelector('#container')
 
+    // wrapper for fetching data and returning it as JSON
+    const fetchJSON = async (url) => {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data;
+    }
+
+    // get country meta information from `countries-list` npm package
+    const metaCountryInfo = async () => {
+        // TODO; copy this file for local consumption, maybe?
+        const information = await fetchJSON('https://cdn.jsdelivr.net/npm/countries-list@2.5.4/dist/countries.emoji.json');
+        return information
+    }
+
+    // get lookup table from source data's lookup table
+    const covidCountryLookUpTable = async () => {
+        // I HATE THIS CSV CONVERSION CODE BUT I COPIED AND PASTED SO, EH!
+        function CSVToJSON(csvData) {
+            var data = CSVToArray(csvData);
+            var objData = [];
+            for (var i = 1; i < data.length; i++) {
+                objData[i - 1] = {};
+                for (var k = 0; k < data[0].length && k < data[i].length; k++) {
+                    var key = data[0][k];
+                    objData[i - 1][key] = data[i][k]
+                }
+            }
+            var jsonData = JSON.stringify(objData);
+            jsonData = jsonData.replace(/},/g, "},\r\n");
+            return jsonData;
+        }
+
+        function CSVToArray(csvData, delimiter) {
+            delimiter = (delimiter || ",");
+            var pattern = new RegExp((
+            "(\\" + delimiter + "|\\r?\\n|\\r|^)" +
+            "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+            "([^\"\\" + delimiter + "\\r\\n]*))"), "gi");
+            var data = [[]];
+            var matches = null;
+            while (matches = pattern.exec(csvData)) {
+                var matchedDelimiter = matches[1];
+                if (matchedDelimiter.length && (matchedDelimiter != delimiter)) {
+                    data.push([]);
+                }
+                if (matches[2]) {
+                    var matchedDelimiter = matches[2].replace(
+                    new RegExp("\"\"", "g"), "\"");
+                } else {
+                    var matchedDelimiter = matches[3];
+                }
+                data[data.length - 1].push(matchedDelimiter);
+            }
+            return (data);
+        }
+
+        const lookupTable = await fetch('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv');
+        const text = await lookupTable.text();
+        return JSON.parse(CSVToJSON(text));
+    }
+
+    // get our covid data
+    const covidFetch = async () => {
+        return await fetchJSON(`http://localhost:8000/api/v1/countries/`);
+    }
+
+    // convert country names to a safe name to use as an unique identifier
+    const createSafeName = (name) => {
+        return name
+            .replace('*', '')
+            .replace(',', '')
+            .replace('(', '')
+            .replace(')', '')
+            .replace("'", '')
+            .split(' ')
+            .join('_')
+            .toLowerCase();
+    }
+    
+    const countryTemplate = document.querySelector('#country-template');
+    const createCountryElementAndAppend = (country) => {
+        const { name, safe_name, emoji, current_rate } = country
+        // clone template
+        const el = countryTemplate.content.cloneNode(true);
+
+        // find outer container div and set id
+        const container = el.querySelector('.country');
+        container.id = safe_name;
+        
+        // find emoji icon div and place content
+        const emojiEl = el.querySelector('.country__info-emoji');
+        emojiEl.innerText = emoji;
+        // find name icon div and place content
+        const nameEl = el.querySelector('.country__info-name');
+        nameEl.innerText = name;
+
+        // set case values
+        const caseMinuteEl = el.querySelector('.country__data-case-minutes');
+        const caseRateEl = el.querySelector('.country__data-case-rate');
+        if (current_rate <= 0) {
+            // TODO: fix those that are negative numbers to remove this condition
+            caseMinuteEl.innerText = 'negative number';
+            caseRateEl.innerText = '???';
+        } else if (current_rate <= (1000 * 60)) {
+            caseMinuteEl.innerText = (current_rate / 1000 / 60 * 100).toFixed(2);
+            caseRateEl.innerText = 'minute';
+        } else {
+            caseMinuteEl.innerText = '1';
+            caseRateEl.innerText = `${Math.round(current_rate / 1000 / 60)} minutes`;
+        }
+
+        // TODO: death calculations
+
+        // append template to content
+        CONTAINER.appendChild(el);
+    }
+
+    window.onload = async function () {
+        /* 1. get list of countries, country info and lookup table info */
+        const countries = await covidFetch();
+        const countryInfo = await metaCountryInfo();
+        const lookupTableData = await covidCountryLookUpTable();
+
+        /* 2. Compose the appropriate information together from both countries and countryInfo */
+        const processedCountries = countries.map(country => {
+            // set default return values
+            const defaultContent = {
+                ...country,
+                safe_name: createSafeName(country.name),
+                emoji: '⚑'
+            };
+
+            // gather calculations
+            const calculations = processCountryData(country);
+
+            // find country in lookup table, if available
+            const lookupTable = lookupTableData.find(lt => lt.Country_Region === country.name);
+            // set country code to gather additional info (i.e. emoji) else don't return anything
+            const countryCode = lookupTable ? lookupTable.iso2 : '';
+            // find actual country info from country code
+            const foundCountryInfo = countryInfo[countryCode];
+            // return combined values
+            return {
+                ...defaultContent,
+                ...calculations,
+                ...foundCountryInfo
+            }
+        })
+
+        /* 3. Create country elements */
+        processedCountries.forEach(createCountryElementAndAppend);
+
+        /* 4. Wait for next dom render to attach bar */
+        setTimeout(() => {
+            for (let i = 0; i < processedCountries.length; i++) {
+                const country = processedCountries[i];
+                const countryEl = CONTAINER.querySelector(`#${country.safe_name}`);
+                const casesEl = countryEl.querySelector('.country__data-cases');
+
+                build_bar(casesEl, country);
+
+                // TODO: death bar
+            }
+        }, 0)
+    }
+
+    /**** Maths ****/
     function poly_three(x, formula) {
-        return formula.a * Math.pow(x, 3) + formula.b * Math.pow(x, 2)  + formula.c * x + formula.d;
+        const { a, b, c, d } = formula;
+        return a * Math.pow(x, 3) + b * Math.pow(x, 2)  + c * x + d;
     }
 
     function poly_three_dx(x, formula) {
-        return 3 * formula.a * Math.pow(x, 2) + 2 * formula.b * x  + formula.c;
+        const { a, b, c } = formula;
+        return 3 * a * Math.pow(x, 2) + 2 * b * x  + c;
     }
 
-    function bar_callback(bar, rate) {
+    /**** Bar Callback ****/
+    function bar_callback(bar, rate, cases) {
+        cases++;
+        bar.setText(cases);
         bar.set(0.0);
-        bar.animate(1.0, {duration: rate}, function(){bar_callback(bar, rate)});
+        bar.animate(1.0, {duration: rate}, function(){bar_callback(bar, rate, cases)});
     }
 
-    window.onload = function onLoad() {
-        var bar = new ProgressBar.Line(container, {
-        strokeWidth: 4,
-        easing: 'linear',
-        duration: 2000,
-        color: '#FFEA82',
-        trailColor: '#eee',
-        trailWidth: 1,
-        svgStyle: {width: '100%', height: '100%'},
-        text: {
-            style: {
-            // Text color.
-            // Default: same as stroke color (options.color)
-            color: '#999',
-            position: 'absolute',
-            right: '0',
-            top: '30px',
-            padding: 0,
-            margin: 0,
-            transform: null
-            },
-            autoStyleContainer: false
-        },
-        from: {color: '#FFEA82'},
-        to: {color: '#ED6A5A'},
-        step: (state, bar) => {
-            bar.setText(Math.round(bar.value() * 100) + ' %');
+    function processCountryData(country) {
+        // Find difference in time between last dataset update and now
+        var t_zero_array = country.t_zero.split('-').map(Number);
+        var current_date = new Date().getTime();
+        var t_zero = Date.UTC(t_zero_array[0], t_zero_array[1]-1, t_zero_array[2])
+        // Represent time in decimal days from last dataset update
+        var x = (current_date - t_zero) / 1000 / 3600 / 24;
+        // Get current number of cases by applying third order polynomial
+        var current_cases = poly_three(x, country.confirmed_formula);
+        // Get current fraction of cases (so that we can start our progress bar in the right place)
+        var current_progress = current_cases % 1;
+        // Period of new confirmed cases in ms
+        var current_rate = 1000 / (poly_three_dx(x, country.confirmed_formula) / 24 / 3600);
+        // Remaining time in progress bar until it reaches end of *current* case
+        var finish_time = current_rate - current_progress * current_rate;
+
+        return {
+            current_cases,
+            current_progress,
+            current_rate,
+            finish_time,
+            // Will we need the following:
+            // x,
+            // t_zero,
+            // current_date,
+            // t_zero_array
         }
+    }
+
+    function build_bar(el, country) {
+        const { current_cases, current_progress, current_rate, finish_time } = country;
+        const cases = Math.floor(current_cases);
+
+        const bar = new ProgressBar.Line(el, {
+            strokeWidth: 4,
+            easing: 'linear',
+            duration: 2000,
+            color: '#02A2E8',
+            trailColor: '#eee',
+            trailWidth: 1,
+            svgStyle: {width: '100%', height: '100%'},
+            text: {
+                style: {
+                    // Text color.
+                    // Default: same as stroke color (options.color)
+                    color: '#000',
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    padding: 0,
+                    margin: 0,
+                    transform: {
+                        prefix: true,
+                        value: 'translate(-50%, -50%)'
+                    }
+                },
+                autoStyleContainer: false
+            },
+            from: {color: '#02A2E8'},
+            to: {color: '#7F7F7F'},
         });
-        fetch('http://localhost:8000/api/v1/countries/us')
-            .then((response) => {
-                return response.json();
-            })
-            .then((data) => {
-                // Find difference in time between last dataset update and now
-                var t_zero_array = data.t_zero.split('-').map(Number);
-                var current_date = new Date().getTime();
-                var t_zero = Date.UTC(t_zero_array[0], t_zero_array[1]-1, t_zero_array[2])
-                // Represent time in decimal days from last dataset update
-                var x = (current_date - t_zero) / 1000 / 3600 / 24;
-                // Get current number of cases by applying third order polynomial
-                var current_cases = poly_three(x, data.confirmed_formula);
-                // Get current fraction of cases (so that we can start our progress bar in the right place)
-                var current_progress = current_cases % 1;
-                // Period of new confirmed cases in ms
-                var current_rate = 1000 / (poly_three_dx(x, data.confirmed_formula) / 24 / 3600);
-                // Remaining time in progress bar until it reaches end of *current* case
-                var finish_time = current_rate - current_progress * current_rate;
-                // Do the bar thing.
-                bar.set(current_progress);
-                bar.animate(1.0, {duration: finish_time}, function(){bar_callback(bar, current_rate)});
-            }); 
+
+        // Do the bar thing.
+        bar.setText(cases);
+        bar.set(current_progress);
+        bar.animate(1.0, {duration: finish_time}, function(){bar_callback(bar, current_rate, cases)});
     };
 </script>
 </body>
