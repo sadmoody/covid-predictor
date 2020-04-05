@@ -2,9 +2,11 @@
 <html>
 <head>
 <script src="{% static "js/progressbar.js" %}"></script>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
     * {
         position: relative;
+        font-family: 'Press Start 2P', cursive;
     }
 
     .country {
@@ -25,6 +27,7 @@
         margin: 8px 4px;
         text-align: center;
         width: 30%;
+        font-size: 15px;
     }
 
     .country__info-emoji {
@@ -33,21 +36,33 @@
         margin-bottom: 6px;
         padding: 4px;
     }
+
+    .country__info-emoji img{
+        width: 100%
+    }
     
     .country__data {
         display: inline-block;
         height: calc(100% - 16px);
         margin: 8px 4px;
         width: 65%;
+        font-size: 10px;
     }
 
     .country__data-cases, .country__data-deaths {
         height: 30px;
+        font-size: 20px;
     }
 
     .country__data svg {
         height: 100%;
         display: block;
+    }
+
+    .pixelated {
+        -ms-interpolation-mode: nearest-neighbor;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: pixelated;
     }
 </style>
 </head>
@@ -64,8 +79,8 @@
             <div class="country__data">
                 <div class="country__data-cases"></div>
                 <div><span class="country__data-case-minutes"></span> case every <span class="country__data-case-rate"></span></div>
-                <!-- <div class="country__data-deaths">deaths todo</div>
-                <div><span class="country__data-death-minutes"></span> death every <span class="country__data-death-rate"></span></div> -->
+                <div class="country__data-deaths"></div>
+                <div><span class="country__data-death-minutes"></span> death every <span class="country__data-death-rate"></span></div>
             </div>
         </div>
     </div>
@@ -73,6 +88,46 @@
 
 <script>
     const CONTAINER = document.querySelector('#container')
+
+    //TODO: Pool audio objects so they can be played in parallel
+    //          create new object if all current objects are busy
+    const confirmed_audio = new Audio('{% static "sounds/confirmed.wav" %}');
+    var confirmed_audio_pool = [confirmed_audio];
+    const death_audio = new Audio('{% static "sounds/death.wav" %}');
+    var death_audio_pool = [death_audio];
+
+    function playAudio(event){
+        var ready_audio;
+        if (event == 'confirmed') {
+            for (var i = 0; i< confirmed_audio_pool.length; i++)
+            {
+                var element = confirmed_audio_pool[i];
+                if (element.paused) {
+                    ready_audio = element;
+                    break;
+                }
+            }
+            if (ready_audio == null){
+                ready_audio = confirmed_audio.cloneNode();
+                confirmed_audio_pool.push(ready_audio);
+            }
+        } else if (event == 'death') {
+            for (var i = 0; i< death_audio_pool.length; i++)
+            {
+                var element = death_audio_pool[i];
+                if (element.paused) {
+                    ready_audio = element;
+                    break;
+                }
+            }
+            if (ready_audio == null){
+                ready_audio = death_audio.cloneNode();
+                death_audio_pool.push(ready_audio);
+            }
+        }
+        ready_audio.play();
+    }
+    
 
     // wrapper for fetching data and returning it as JSON
     const fetchJSON = async (url) => {
@@ -155,7 +210,7 @@
     
     const countryTemplate = document.querySelector('#country-template');
     const createCountryElementAndAppend = (country) => {
-        const { name, safe_name, emoji, current_rate } = country
+        const { name, safe_name, emoji, current_case_rate, current_death_rate } = country
         // clone template
         const el = countryTemplate.content.cloneNode(true);
 
@@ -165,30 +220,39 @@
         
         // find emoji icon div and place content
         const emojiEl = el.querySelector('.country__info-emoji');
-        emojiEl.innerText = emoji;
+        emojiEl.innerHTML = "<img class=\"pixelated\" src=\"{% static "images/flags/" %}"+name.toLowerCase()+".png\" />";
         // find name icon div and place content
         const nameEl = el.querySelector('.country__info-name');
         nameEl.innerText = name;
 
+     
+
+        // append template to content
+        CONTAINER.appendChild(el);
+
+        setTimeout(() => {
+            updateCurrentRate(safe_name, current_case_rate, 'case');
+            updateCurrentRate(safe_name, current_death_rate, 'death');
+        }, 0)
+        
+    }
+
+    function updateCurrentRate(country, current_rate, rate_type='case') {
+        const el = CONTAINER.querySelector('#' + country.toLowerCase());
         // set case values
-        const caseMinuteEl = el.querySelector('.country__data-case-minutes');
-        const caseRateEl = el.querySelector('.country__data-case-rate');
+        const caseMinuteEl = el.querySelector('.country__data-' + rate_type + '-minutes');
+        const caseRateEl = el.querySelector('.country__data-' + rate_type + '-rate');
         if (current_rate <= 0) {
             // TODO: fix those that are negative numbers to remove this condition
             caseMinuteEl.innerText = 'negative number';
             caseRateEl.innerText = '???';
-        } else if (current_rate <= (1000 * 60)) {
-            caseMinuteEl.innerText = (current_rate / 1000 / 60 * 100).toFixed(2);
-            caseRateEl.innerText = 'minute';
+        } else if (current_rate <= (1000 * 100)) {
+            caseMinuteEl.innerText = 1;
+            caseRateEl.innerText = (current_rate / 1000).toFixed(2).toString() + ' seconds';
         } else {
             caseMinuteEl.innerText = '1';
             caseRateEl.innerText = `${Math.round(current_rate / 1000 / 60)} minutes`;
         }
-
-        // TODO: death calculations
-
-        // append template to content
-        CONTAINER.appendChild(el);
     }
 
     window.onload = async function () {
@@ -232,10 +296,10 @@
                 const country = processedCountries[i];
                 const countryEl = CONTAINER.querySelector(`#${country.safe_name}`);
                 const casesEl = countryEl.querySelector('.country__data-cases');
+                const deathsEl = countryEl.querySelector('.country__data-deaths');
 
-                build_bar(casesEl, country);
-
-                // TODO: death bar
+                build_case_bar(casesEl, country);
+                build_death_bar(deathsEl, country);
             }
         }, 0)
     }
@@ -252,11 +316,21 @@
     }
 
     /**** Bar Callback ****/
-    function bar_callback(bar, rate, cases) {
-        cases++;
-        bar.setText(cases);
-        bar.set(0.0);
-        bar.animate(1.0, {duration: rate}, function(){bar_callback(bar, rate, cases)});
+    function bar_callback(bar, country, rate_type='case') {
+        var calculations = processCountryData(country);
+        if (rate_type == 'case'){
+            playAudio('confirmed');
+            bar.setText(Math.floor(calculations.current_cases));
+            bar.set(calculations.current_case_progress);
+            updateCurrentRate(country.safe_name, country.current_case_rate)
+            bar.animate(1.0, {duration: calculations.case_finish_time}, function(){bar_callback(bar, country, rate_type)});
+        } else if (rate_type == 'death') {
+            playAudio('death');
+            bar.setText(Math.floor(calculations.current_deaths));
+            bar.set(calculations.current_death_progress);
+            updateCurrentRate(country.safe_name, country.current_death_rate)
+            bar.animate(1.0, {duration: calculations.death_finish_time}, function(){bar_callback(bar, country, rate_type)});
+        }
     }
 
     function processCountryData(country) {
@@ -269,17 +343,30 @@
         // Get current number of cases by applying third order polynomial
         var current_cases = poly_three(x, country.confirmed_formula);
         // Get current fraction of cases (so that we can start our progress bar in the right place)
-        var current_progress = current_cases % 1;
+        var current_case_progress = current_cases % 1;
         // Period of new confirmed cases in ms
-        var current_rate = 1000 / (poly_three_dx(x, country.confirmed_formula) / 24 / 3600);
+        var current_case_rate = 1000 / (poly_three_dx(x, country.confirmed_formula) / 24 / 3600);
         // Remaining time in progress bar until it reaches end of *current* case
-        var finish_time = current_rate - current_progress * current_rate;
+        var case_finish_time = current_case_rate - current_case_progress * current_case_rate;
+
+        // Get current number of cases by applying third order polynomial
+        var current_deaths = poly_three(x, country.death_formula);
+        // Get current fraction of cases (so that we can start our progress bar in the right place)
+        var current_death_progress = current_deaths % 1;
+        // Period of new confirmed cases in ms
+        var current_death_rate = 1000 / (poly_three_dx(x, country.death_formula) / 24 / 3600);
+        // Remaining time in progress bar until it reaches end of *current* case
+        var death_finish_time = current_death_rate - current_death_progress * current_death_rate;
 
         return {
             current_cases,
-            current_progress,
-            current_rate,
-            finish_time,
+            current_case_progress,
+            current_case_rate,
+            case_finish_time,
+            current_deaths,
+            current_death_progress,
+            current_death_rate,
+            death_finish_time,
             // Will we need the following:
             // x,
             // t_zero,
@@ -288,8 +375,8 @@
         }
     }
 
-    function build_bar(el, country) {
-        const { current_cases, current_progress, current_rate, finish_time } = country;
+    function build_case_bar(el, country) {
+        const { current_cases, current_case_progress, current_case_rate, case_finish_time } = country;
         const cases = Math.floor(current_cases);
 
         const bar = new ProgressBar.Line(el, {
@@ -323,8 +410,49 @@
 
         // Do the bar thing.
         bar.setText(cases);
-        bar.set(current_progress);
-        bar.animate(1.0, {duration: finish_time}, function(){bar_callback(bar, current_rate, cases)});
+        bar.set(current_case_progress);
+        if (case_finish_time >= 0)
+            bar.animate(1.0, {duration: case_finish_time}, function(){bar_callback(bar, country, 'case')});
+    };
+
+    function build_death_bar(el, country) {
+        const { current_deaths, current_death_progress, current_death_rate, death_finish_time } = country;
+        const deaths = Math.floor(current_deaths);
+
+        const bar = new ProgressBar.Line(el, {
+            strokeWidth: 4,
+            easing: 'linear',
+            duration: 2000,
+            color: '#f33',
+            trailColor: '#eee',
+            trailWidth: 1,
+            svgStyle: {width: '100%', height: '100%'},
+            text: {
+                style: {
+                    // Text color.
+                    // Default: same as stroke color (options.color)
+                    color: '#000',
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    padding: 0,
+                    margin: 0,
+                    transform: {
+                        prefix: true,
+                        value: 'translate(-50%, -50%)'
+                    }
+                },
+                autoStyleContainer: false
+            },
+            from: {color: '#02A2E8'},
+            to: {color: '#7F7F7F'},
+        });
+
+        // Do the bar thing.
+        bar.setText(deaths);
+        bar.set(current_death_progress);
+        if (death_finish_time >= 0)
+            bar.animate(1.0, {duration: death_finish_time}, function(){bar_callback(bar, country, 'death')});
     };
 </script>
 </body>
