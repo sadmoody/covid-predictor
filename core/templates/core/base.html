@@ -1,7 +1,14 @@
 {% load static %}
+<!doctype html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 <script src="{% static "js/progressbar.js" %}"></script>
+<link href="https://unpkg.com/nes.css@latest/css/nes.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
     * {
@@ -9,12 +16,16 @@
         font-family: 'Press Start 2P', cursive;
     }
 
+    #container {
+        margin: 30px;
+    }
+
     .country {
-        border: 2px solid black;
         display: inline-block;
-        height: 150px;
-        margin: 6px;
-        width: calc(25vw - 24px);
+    }
+
+    .country-outer {
+        padding:5px;
     }
 
     .country__container {
@@ -22,19 +33,14 @@
     }
 
     .country__info {
-        display: flex;
-        flex-direction: column;
-        margin: 8px 4px;
-        text-align: center;
-        width: 30%;
         font-size: 15px;
     }
 
     .country__info-emoji {
-        border: 2px solid black;
-        font-size: 60px;
-        margin-bottom: 6px;
-        padding: 4px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
     }
 
     .country__info-emoji img{
@@ -43,9 +49,6 @@
     
     .country__data {
         display: inline-block;
-        height: calc(100% - 16px);
-        margin: 8px 4px;
-        width: 65%;
         font-size: 10px;
     }
 
@@ -68,19 +71,24 @@
 </head>
 <body>
 <h1>P O L Y MEGA T H I C C Progress!</h1>
+<template id ="row-template">
+<div class="row"></div>
+</template>
 <div id="container"></div>
 <template id="country-template">
-    <div class="country">
-        <div class="country__container">
-            <div class="country__info">
-                <div class="country__info-emoji"></div>
-                <div class="country__info-name"></div>
-            </div>
-            <div class="country__data">
-                <div class="country__data-cases"></div>
-                <div><span class="country__data-case-minutes"></span> case every <span class="country__data-case-rate"></span></div>
-                <div class="country__data-deaths"></div>
-                <div><span class="country__data-death-minutes"></span> death every <span class="country__data-death-rate"></span></div>
+    <div class="country-outer col-sm-12 col-md-6 col-lg-6 col-xl-4" />
+        <div class="country col-12 nes-container with-title">
+            <h3 class="country__info-name title">Country Name</h3>
+            <div class="country__container">
+                <div class="country__info col-3">
+                    <div class="country__info-emoji"></div>
+                </div>
+                <div class="country__data col-9">
+                    <div class="country__data-cases"></div>
+                    <div><span class="country__data-case-minutes"></span><span class="country__data-case-inbetween"> case every </span><span class="country__data-case-rate"></span></div>
+                    <div class="country__data-deaths"></div>
+                    <div><span class="country__data-death-minutes"></span><span class="country__data-death-inbetween"> death every </span><span class="country__data-death-rate"></span></div>
+                </div>
             </div>
         </div>
     </div>
@@ -192,7 +200,7 @@
 
     // get our covid data
     const covidFetch = async () => {
-        return await fetchJSON(`http://localhost:8000/api/v1/countries/`);
+        return await fetchJSON(`/api/v1/countries/`);
     }
 
     // convert country names to a safe name to use as an unique identifier
@@ -209,6 +217,7 @@
     }
     
     const countryTemplate = document.querySelector('#country-template');
+    const rowTemplate = document.querySelector('#row-template');
     const createCountryElementAndAppend = (country) => {
         const { name, safe_name, emoji, current_case_rate, current_death_rate } = country
         // clone template
@@ -225,10 +234,39 @@
         const nameEl = el.querySelector('.country__info-name');
         nameEl.innerText = name;
 
-     
+        var rows = CONTAINER.children;
+        console.log(rows + ": " + rows.length.toString());
+        var candidate_row = null;
+        for (var i=0; i<rows.length; i++){
+            var row_children = rows[i].children;
+            if (row_children.length >= 12){
+                continue;
+            } else {
+                candidate_row = rows[i];
+                break;
+            }
+        }
+
+        if (candidate_row == null) {
+            var cloned_row = rowTemplate.content.cloneNode(true);
+            candidate_row = CONTAINER.appendChild(cloned_row);
+
+            // This is really gross but it doesn't seem to set candidate_row to the right instance for every first call
+            rows = CONTAINER.children;
+            candidate_row = null;
+            for (var i=0; i<rows.length; i++){
+                var row_children = rows[i].children;
+                if (row_children.length >= 12){
+                    continue;
+                } else {
+                    candidate_row = rows[i];
+                    break;
+                }
+            }
+        }
 
         // append template to content
-        CONTAINER.appendChild(el);
+        candidate_row.appendChild(el);
 
         setTimeout(() => {
             updateCurrentRate(safe_name, current_case_rate, 'case');
@@ -242,10 +280,12 @@
         // set case values
         const caseMinuteEl = el.querySelector('.country__data-' + rate_type + '-minutes');
         const caseRateEl = el.querySelector('.country__data-' + rate_type + '-rate');
-        if (current_rate <= 0) {
+        const caseInbetweenEl = el.querySelector('.country__data-' + rate_type + '-inbetween');
+        if ((current_rate <= 0) || (current_rate >= Infinity)) {
             // TODO: fix those that are negative numbers to remove this condition
-            caseMinuteEl.innerText = 'negative number';
-            caseRateEl.innerText = '???';
+            caseMinuteEl.innerText = '';
+            caseRateEl.innerText = '';
+            caseInbetweenEl.innerText = "Stable"
         } else if (current_rate <= (1000 * 100)) {
             caseMinuteEl.innerText = 1;
             caseRateEl.innerText = (current_rate / 1000).toFixed(2).toString() + ' seconds';
@@ -320,16 +360,28 @@
         var calculations = processCountryData(country);
         if (rate_type == 'case'){
             playAudio('confirmed');
-            bar.setText(Math.floor(calculations.current_cases));
-            bar.set(calculations.current_case_progress);
-            updateCurrentRate(country.safe_name, country.current_case_rate)
-            bar.animate(1.0, {duration: calculations.case_finish_time}, function(){bar_callback(bar, country, rate_type)});
+            if (calculations.current_case_rate <= 0){
+                bar.setText(country.latest_confirmed_count);
+                bar.set(0);
+                updateCurrentRate(country.safe_name, country.latest_confirmed_count, 'case')
+            } else {
+                bar.setText(Math.floor(calculations.current_cases));
+                bar.set(calculations.current_case_progress);
+                updateCurrentRate(country.safe_name, country.current_case_rate, 'case')
+                bar.animate(1.0, {duration: calculations.case_finish_time}, function(){bar_callback(bar, country, rate_type)});
+            }
         } else if (rate_type == 'death') {
             playAudio('death');
-            bar.setText(Math.floor(calculations.current_deaths));
-            bar.set(calculations.current_death_progress);
-            updateCurrentRate(country.safe_name, country.current_death_rate)
-            bar.animate(1.0, {duration: calculations.death_finish_time}, function(){bar_callback(bar, country, rate_type)});
+            if (calculations.current_death_rate <= 0){
+                bar.setText(country.latest_death_count);
+                bar.set(0);
+                updateCurrentRate(country.safe_name, country.latest_death_count, 'death')
+            } else {
+                bar.setText(Math.floor(calculations.current_deaths));
+                bar.set(calculations.current_death_progress);
+                updateCurrentRate(country.safe_name, country.current_death_rate, 'death')
+                bar.animate(1.0, {duration: calculations.death_finish_time}, function(){bar_callback(bar, country, rate_type)});
+            }
         }
     }
 
@@ -408,11 +460,16 @@
             to: {color: '#7F7F7F'},
         });
 
-        // Do the bar thing.
-        bar.setText(cases);
-        bar.set(current_case_progress);
-        if (case_finish_time >= 0)
-            bar.animate(1.0, {duration: case_finish_time}, function(){bar_callback(bar, country, 'case')});
+        if (current_case_rate <= 0){
+            bar.setText(country.latest_confirmed_count);
+            bar.set(0);
+        } else {
+            // Do the bar thing.
+            bar.setText(cases);
+            bar.set(current_case_progress);
+            if (case_finish_time >= 0)
+                bar.animate(1.0, {duration: case_finish_time}, function(){bar_callback(bar, country, 'case')});
+        }
     };
 
     function build_death_bar(el, country) {
@@ -448,11 +505,16 @@
             to: {color: '#7F7F7F'},
         });
 
-        // Do the bar thing.
-        bar.setText(deaths);
-        bar.set(current_death_progress);
-        if (death_finish_time >= 0)
-            bar.animate(1.0, {duration: death_finish_time}, function(){bar_callback(bar, country, 'death')});
+        if (current_death_rate <= 0){
+            bar.setText(country.latest_death_count);
+            bar.set(0);
+        } else {
+            // Do the bar thing.
+            bar.setText(deaths);
+            bar.set(current_death_progress);
+            if (death_finish_time >= 0)
+                bar.animate(1.0, {duration: death_finish_time}, function(){bar_callback(bar, country, 'death')});
+        }
     };
 </script>
 </body>

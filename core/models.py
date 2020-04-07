@@ -20,3 +20,17 @@ class Country(models.Model):
     death_formula = models.ForeignKey(Formula, on_delete=models.CASCADE, null=True, related_name="%(class)s_country_death")
     long = models.DecimalField(max_digits=9, decimal_places=6)
     lat = models.DecimalField(max_digits=9, decimal_places=6)
+
+    def latest_confirmed_count(self):
+        latest_confirmed_entry = self.confirmed.latest('date')
+        if (latest_confirmed_entry is not None):
+            return latest_confirmed_entry.value
+        else:
+            return 0
+
+    def latest_death_count(self):
+        latest_death_entry = self.death.latest('date')
+        if (latest_death_entry is not None):
+            return latest_death_entry.value
+        else:
+            return 0
