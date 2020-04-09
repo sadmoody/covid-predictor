@@ -19,8 +19,16 @@
     body[data-loading="true"] #country-container {
         visibility: hidden;
     }
+
     body[data-loading="false"] #loading {
         display: none;
+    }
+
+    #loading-text {
+        position: absolute;
+        text-align: center;
+        top: 15px;
+        width: 100%;
     }
 
     #container {
@@ -113,8 +121,10 @@
         <div class="col">
             <div class="nes-container with-title">
                 <p class="title">Loading...</p>
-                <progress id="loading-bar" class="nes-progress is-primary" value="1" max="100"></progress>
-                <p id="loading-text">Making a few quick queries</p>
+                <div>
+                    <progress id="loading-bar" class="nes-progress is-primary" value="1" max="100"></progress>
+                    <div id="loading-text">Making a few quick queries</div>
+                </div>
             </div>
         </div>
     </div>
