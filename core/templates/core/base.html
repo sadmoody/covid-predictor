@@ -16,6 +16,13 @@
         font-family: 'Press Start 2P', cursive;
     }
 
+    body[data-loading="true"] #country-container {
+        visibility: hidden;
+    }
+    body[data-loading="false"] #loading {
+        display: none;
+    }
+
     #container {
         margin: 30px;
     }
@@ -84,7 +91,7 @@
     }
 </style>
 </head>
-<body>    
+<body data-loading="true">    
 <div id="container">
     <div class="row" id="top-container">
         <div class="col-sm-12 col-md-6 col-lg-6 col-xl-8">
@@ -92,13 +99,22 @@
         </div>
         <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
             <div class="nes-select">
-                <select required id="sort-selector">
+                <select required id="sort-selector" disabled>
                     <option value="name" selected>Alphabetical</option>
                     <option value="caseCount">Most Cases</option>
                     <option value="deathCount">Most Deaths</option>
                     <option value="caseRate">Fastest Case Rate</option>
                     <option value="deathRate">Fastest Death Rate</option>
                 </select>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="loading">
+        <div class="col">
+            <div class="nes-container with-title">
+                <p class="title">Loading...</p>
+                <progress id="loading-bar" class="nes-progress is-primary" value="1" max="100"></progress>
+                <p id="loading-text">Making a few quick queries</p>
             </div>
         </div>
     </div>
@@ -259,7 +275,7 @@
     
     const countryTemplate = document.querySelector('#country-template');
     const createCountryElementAndAppend = (country) => {
-        const { name, safe_name, emoji, current_case_rate, current_death_rate, current_cases, current_deaths } = country
+        const { name, safe_name, emoji } = country;
         // clone template
         const el = countryTemplate.content.cloneNode(true);
 
@@ -274,23 +290,7 @@
         const nameEl = el.querySelector('.country__info-name');
         nameEl.innerText = name;
 
-        CONTAINER.appendChild(el);
-
-        setTimeout(() => {
-            updateCurrentRate(safe_name, current_case_rate, 'case');
-            updateCurrentRate(safe_name, current_death_rate, 'death');
-            if (current_case_rate <= 0){
-                update_data_fields(country.safe_name, country.latest_confirmed_count, Infinity, 'case');
-            } else {
-                update_data_fields(country.safe_name, current_cases, current_case_rate, 'case');
-            }
-            if (current_death_rate <= 0){
-                update_data_fields(country.safe_name, country.latest_death_count, Infinity, 'death');
-            } else {
-                update_data_fields(country.safe_name, current_deaths, current_death_rate, 'death');
-            }
-        }, 0)
-        
+        CONTAINER.appendChild(el);        
     }
 
     function updateCurrentRate(country, current_rate, rate_type='case') {
@@ -316,11 +316,22 @@
     }
 
     window.onload = async function () {
+        const LOADING_BAR = document.querySelector('#loading-bar');
+        const LOADING_TEXT = document.querySelector('#loading-text');
+        const SORT_SELECTOR = document.querySelector('#sort-selector');
         /* 1. get list of countries, country info and lookup table info */
+        LOADING_BAR.value = 10;
+        LOADING_TEXT.innerText = 'loading countries';
         const countries = await covidFetch();
+        LOADING_BAR.value = 30;
+        LOADING_TEXT.innerText = 'gathering additional country informtion';
         const countryInfo = await metaCountryInfo();
+        LOADING_BAR.value = 50;
+        LOADING_TEXT.innerText = 'wait there is more country info?';
         const lookupTableData = await covidCountryLookUpTable();
 
+        LOADING_BAR.value = 70;
+        LOADING_TEXT.innerText = 'ok, almost there. have to process data';
         /* 2. Compose the appropriate information together from both countries and countryInfo */
         const processedCountries = countries.map(country => {
             // set default return values
@@ -348,9 +359,13 @@
         })
 
         /* 3. Create country elements */
+        LOADING_BAR.value = 85;
+        LOADING_TEXT.innerText = 'lets add the data to the page';
         processedCountries.forEach(createCountryElementAndAppend);
 
         /* 4. Wait for next dom render to attach bar */
+        LOADING_BAR.value = 90;
+        LOADING_TEXT.innerText = 'almost there. just have to animate and enable things...';
         setTimeout(() => {
             for (let i = 0; i < processedCountries.length; i++) {
                 const country = processedCountries[i];
@@ -363,6 +378,10 @@
                 build_bar(casesEl, casesTextEl, country, 'case');
                 build_bar(deathsEl, deathsTextEl, country, 'death');
             }
+
+            LOADING_BAR.value = 100;
+            SORT_SELECTOR.disabled = false;
+            document.body.dataset.loading = "false";
         }, 0)
     }
 
@@ -442,9 +461,8 @@
         const value = Math.floor(current);
         
         updateCurrentRate(safe_name, rate, type);
-        if (rate <= 0)
-        {
-          update_data_fields(safe_name, type === 'case' ? country.latest_confirmed_count : country.latest_death_count, Infinity, type);
+        if (rate <= 0) {
+          update_data_fields(safe_name, confirmed_count, Infinity, type);
         } else {
           update_data_fields(safe_name, current, rate, type); 
         }
