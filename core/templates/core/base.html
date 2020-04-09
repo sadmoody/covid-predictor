@@ -78,6 +78,10 @@
     .invisible {
         display: none;
     }
+
+    .nes-select {
+        padding: 1.5rem 0.5rem;
+    }
 </style>
 </head>
 <body>    
@@ -89,8 +93,7 @@
         <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
             <div class="nes-select">
                 <select required id="sort-selector">
-                    <option value="" disabled selected hidden>Sort...</option>
-                    <option value="name">Alphabetical</option>
+                    <option value="name" selected>Alphabetical</option>
                     <option value="caseCount">Most Cases</option>
                     <option value="deathCount">Most Deaths</option>
                     <option value="caseRate">Fastest Case Rate</option>
@@ -111,10 +114,10 @@
         data-death-rate >
             <h3 class="country__info-name title">Country Name</h3>
             <div class="country__container">
-                <div class="country__info col-3">
+                <div class="country__info col-4">
                     <div class="country__info-emoji"></div>
                 </div>
-                <div class="country__data col-9">
+                <div class="country__data col-8">
                     <div>
                         <progress class="country__data-cases nes-progress is-primary" value="0" max="1"></progress>
                         <div class="country__data-cases-text"></div>
