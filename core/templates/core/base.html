@@ -283,6 +283,27 @@
         candidate_row.appendChild(el);
     }
 
+    function updateCurrentRate(country, current_rate, rate_type='case') {
+        const el = CONTAINER.querySelector('#' + country.toLowerCase());
+
+        // set case values
+        const caseMinuteEl = el.querySelector('.country__data-' + rate_type + '-minutes');
+        const caseRateEl = el.querySelector('.country__data-' + rate_type + '-rate');
+        const caseInbetweenEl = el.querySelector('.country__data-' + rate_type + '-inbetween');
+        if ((current_rate <= 0) || (current_rate >= Infinity)) {
+            // TODO: fix those that are negative numbers to remove this condition
+            caseMinuteEl.innerText = '';
+            caseRateEl.innerText = '';
+            caseInbetweenEl.innerText = "Stable"
+        } else if (current_rate <= (1000 * 100)) {
+            caseMinuteEl.innerText = 1;
+            caseRateEl.innerText = (current_rate / 1000).toFixed(2).toString() + ' seconds';
+        } else {
+            caseMinuteEl.innerText = '1';
+            caseRateEl.innerText = `${Math.round(current_rate / 1000 / 60)} minutes`;
+        }
+    }
+
     window.onload = async function () {
         /* 1. get list of countries, country info and lookup table info */
         const countries = await covidFetch();
@@ -390,27 +411,6 @@
             // t_zero,
             // current_date,
             // t_zero_array
-        }
-    }
-
-    function updateCurrentRate(country, current_rate, rate_type='case') {
-        const el = CONTAINER.querySelector('#' + country.toLowerCase());
-
-        // set case values
-        const caseMinuteEl = el.querySelector('.country__data-' + rate_type + '-minutes');
-        const caseRateEl = el.querySelector('.country__data-' + rate_type + '-rate');
-        const caseInbetweenEl = el.querySelector('.country__data-' + rate_type + '-inbetween');
-        if ((current_rate <= 0) || (current_rate >= Infinity)) {
-            // TODO: fix those that are negative numbers to remove this condition
-            caseMinuteEl.innerText = '';
-            caseRateEl.innerText = '';
-            caseInbetweenEl.innerText = "Stable"
-        } else if (current_rate <= (1000 * 100)) {
-            caseMinuteEl.innerText = 1;
-            caseRateEl.innerText = (current_rate / 1000).toFixed(2).toString() + ' seconds';
-        } else {
-            caseMinuteEl.innerText = '1';
-            caseRateEl.innerText = `${Math.round(current_rate / 1000 / 60)} minutes`;
         }
     }
 
