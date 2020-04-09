@@ -67,17 +67,41 @@
         image-rendering: -moz-crisp-edges;
         image-rendering: pixelated;
     }
+
+    .invisible {
+        display: none;
+    }
 </style>
 </head>
-<body>
-<h1>P O L Y MEGA T H I C C Progress!</h1>
-<template id ="row-template">
-<div class="row"></div>
-</template>
-<div id="container"></div>
+<body>    
+<div id="container">
+    <div class="row" id="top-container">
+        <div class="col-sm-12 col-md-6 col-lg-6 col-xl-8">
+            <h1>Covid-19 Loader</h1>
+        </div>
+        <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
+            <div class="nes-select">
+                <select required id="sort-selector">
+                    <option value="" disabled selected hidden>Sort...</option>
+                    <option value="name">Alphabetical</option>
+                    <option value="caseCount">Most Cases</option>
+                    <option value="deathCount">Most Deaths</option>
+                    <option value="caseRate">Fastest Case Rate</option>
+                    <option value="deathRate">Fastest Death Rate</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="country-container">
+    </div>
+</div>
 <template id="country-template">
-    <div class="country-outer col-sm-12 col-md-6 col-lg-6 col-xl-4" />
-        <div class="country col-12 nes-container with-title">
+    <div class="country-outer col-sm-12 col-md-6 col-lg-6 col-xl-4">
+        <div class="country col-12 nes-container with-title" 
+        data-case-count
+        data-case-rate
+        data-death-count
+        data-death-rate >
             <h3 class="country__info-name title">Country Name</h3>
             <div class="country__container">
                 <div class="country__info col-3">
@@ -95,7 +119,7 @@
 </template>
 
 <script>
-    const CONTAINER = document.querySelector('#container')
+    const CONTAINER = document.querySelector('#country-container');
 
     //TODO: Pool audio objects so they can be played in parallel
     //          create new object if all current objects are busy
@@ -217,9 +241,8 @@
     }
     
     const countryTemplate = document.querySelector('#country-template');
-    const rowTemplate = document.querySelector('#row-template');
     const createCountryElementAndAppend = (country) => {
-        const { name, safe_name, emoji, current_case_rate, current_death_rate } = country
+        const { name, safe_name, emoji, current_case_rate, current_death_rate, current_cases, current_deaths } = country
         // clone template
         const el = countryTemplate.content.cloneNode(true);
 
@@ -233,44 +256,22 @@
         // find name icon div and place content
         const nameEl = el.querySelector('.country__info-name');
         nameEl.innerText = name;
-
-        var rows = CONTAINER.children;
-        console.log(rows + ": " + rows.length.toString());
-        var candidate_row = null;
-        for (var i=0; i<rows.length; i++){
-            var row_children = rows[i].children;
-            if (row_children.length >= 12){
-                continue;
-            } else {
-                candidate_row = rows[i];
-                break;
-            }
-        }
-
-        if (candidate_row == null) {
-            var cloned_row = rowTemplate.content.cloneNode(true);
-            candidate_row = CONTAINER.appendChild(cloned_row);
-
-            // This is really gross but it doesn't seem to set candidate_row to the right instance for every first call
-            rows = CONTAINER.children;
-            candidate_row = null;
-            for (var i=0; i<rows.length; i++){
-                var row_children = rows[i].children;
-                if (row_children.length >= 12){
-                    continue;
-                } else {
-                    candidate_row = rows[i];
-                    break;
-                }
-            }
-        }
-
-        // append template to content
-        candidate_row.appendChild(el);
+        
+        CONTAINER.appendChild(el);
 
         setTimeout(() => {
             updateCurrentRate(safe_name, current_case_rate, 'case');
             updateCurrentRate(safe_name, current_death_rate, 'death');
+            if (current_case_rate <= 0){
+                update_data_fields(country.safe_name, country.latest_confirmed_count, Infinity, 'case');
+            } else {
+                update_data_fields(country.safe_name, current_cases, current_case_rate, 'case');
+            }
+            if (current_death_rate <= 0){
+                update_data_fields(country.safe_name, country.latest_death_count, Infinity, 'death');
+            } else {
+                update_data_fields(country.safe_name, current_deaths, current_death_rate, 'death');
+            }
         }, 0)
         
     }
@@ -281,6 +282,7 @@
         const caseMinuteEl = el.querySelector('.country__data-' + rate_type + '-minutes');
         const caseRateEl = el.querySelector('.country__data-' + rate_type + '-rate');
         const caseInbetweenEl = el.querySelector('.country__data-' + rate_type + '-inbetween');
+         
         if ((current_rate <= 0) || (current_rate >= Infinity)) {
             // TODO: fix those that are negative numbers to remove this condition
             caseMinuteEl.innerText = '';
@@ -355,6 +357,13 @@
         return 3 * a * Math.pow(x, 2) + 2 * b * x  + c;
     }
 
+    function update_data_fields(country, current_count, current_rate, rate_type='case') {
+        const el = CONTAINER.querySelector('#' + country.toLowerCase());
+        el.dataset[rate_type + 'Count'] = current_count;
+        el.dataset[rate_type + 'Rate'] = current_rate;
+        el.dataset['name'] = country;
+    }
+
     /**** Bar Callback ****/
     function bar_callback(bar, country, rate_type='case') {
         var calculations = processCountryData(country);
@@ -363,11 +372,13 @@
             if (calculations.current_case_rate <= 0){
                 bar.setText(country.latest_confirmed_count);
                 bar.set(0);
-                updateCurrentRate(country.safe_name, country.latest_confirmed_count, 'case')
+                updateCurrentRate(country.safe_name, country.latest_confirmed_count, 'case');
+                update_data_fields(country.safe_name, country.latest_confirmed_count, 0, 'case');
             } else {
                 bar.setText(Math.floor(calculations.current_cases));
                 bar.set(calculations.current_case_progress);
-                updateCurrentRate(country.safe_name, country.current_case_rate, 'case')
+                updateCurrentRate(country.safe_name, country.current_case_rate, 'case');
+                update_data_fields(country.safe_name, calculations.current_cases, calculations.current_case_rate, 'case');
                 bar.animate(1.0, {duration: calculations.case_finish_time}, function(){bar_callback(bar, country, rate_type)});
             }
         } else if (rate_type == 'death') {
@@ -375,11 +386,13 @@
             if (calculations.current_death_rate <= 0){
                 bar.setText(country.latest_death_count);
                 bar.set(0);
-                updateCurrentRate(country.safe_name, country.latest_death_count, 'death')
+                updateCurrentRate(country.safe_name, country.latest_death_count, 'death');
+                update_data_fields(country.safe_name, country.latest_death_count, 0, 'case');
             } else {
                 bar.setText(Math.floor(calculations.current_deaths));
                 bar.set(calculations.current_death_progress);
-                updateCurrentRate(country.safe_name, country.current_death_rate, 'death')
+                updateCurrentRate(country.safe_name, calculations.current_death_rate, 'death');
+                update_data_fields(country.safe_name, calculations.current_deaths, calculations.current_death_rate, 'death');
                 bar.animate(1.0, {duration: calculations.death_finish_time}, function(){bar_callback(bar, country, rate_type)});
             }
         }
@@ -516,6 +529,55 @@
                 bar.animate(1.0, {duration: death_finish_time}, function(){bar_callback(bar, country, 'death')});
         }
     };
+
+    function sort_elements(attribute, parent_element_id, filter, depth=0, multiplier = 1.0, discrete=false) {
+        var parent_element = document.getElementById(parent_element_id);
+        var children = parent_element.querySelectorAll(filter);
+        var reordered = Array.from(children);
+        if (discrete) {
+            reordered.sort(function (a, b) {
+                var val = 0;
+                if (a.dataset[attribute] > b.dataset[attribute]) {
+                    val = -1;
+                }
+                if (b.dataset[attribute] > a.dataset[attribute]) {
+                    val = 1;
+                }
+                return val * multiplier;
+            });
+        } else {
+            reordered.sort(function(a, b){
+                return (multiplier * (parseFloat(a.dataset[attribute]) - parseFloat(b.dataset[attribute])));
+            });
+        }
+        for(var child_index in reordered) {
+            var currentNode = reordered[child_index];
+            for (var i=0; i<depth; i++)
+                currentNode = currentNode.parentNode;
+            parent_element.appendChild(currentNode);    
+        }
+    }
+
+    document.getElementById("sort-selector").onchange = changeListener;
+    
+    function changeListener(){
+        var value = this.value;
+        switch (value) {
+            case 'caseCount':
+            case 'deathCount':
+                sort_elements(value, 'country-container', '.country-outer .country', depth=1, multiplier=-1.0);
+                break;
+            case 'caseRate':
+            case 'deathRate':
+                sort_elements(value, 'country-container', '.country-outer .country', depth=1, multiplier=1.0);
+                break;
+            case 'name':
+            default:
+                sort_elements('name', 'country-container', '.country-outer .country', depth=1, multiplier=-1.0, discrete=true);
+        }
+        
+    }
+
 </script>
 </body>
 
