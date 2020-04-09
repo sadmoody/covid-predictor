@@ -4,8 +4,8 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-<script src="{% static "js/progressbar.js" %}"></script>
-<link href="https://unpkg.com/nes.css@latest/css/nes.min.css" rel="stylesheet" />
+<script src="https://rawgit.com/jeremyckahn/shifty/gh-pages/shifty.js" crossorigin="anonymous"></script>
+<link href="{% static "css/nes.min.css" %}" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
@@ -55,6 +55,13 @@
     .country__data-cases, .country__data-deaths {
         height: 30px;
         font-size: 20px;
+    }
+    
+    .country__data-cases-text, .country__data-deaths-text {
+        position: absolute;
+        text-align: center;
+        top: 12px;
+        width: 100%;
     }
 
     .country__data svg {
@@ -108,9 +115,16 @@
                     <div class="country__info-emoji"></div>
                 </div>
                 <div class="country__data col-9">
-                    <div class="country__data-cases"></div>
+                    <div>
+                        <progress class="country__data-cases nes-progress is-primary" value="0" max="1"></progress>
+                        <div class="country__data-cases-text"></div>
+                    </div>
                     <div><span class="country__data-case-minutes"></span><span class="country__data-case-inbetween"> case every </span><span class="country__data-case-rate"></span></div>
-                    <div class="country__data-deaths"></div>
+                    
+                    <div>
+                        <progress class="country__data-deaths nes-progress is-error" value="0" max="1"></progress>
+                        <div class="country__data-deaths-text"></div>
+                    </div>
                     <div><span class="country__data-death-minutes"></span><span class="country__data-death-inbetween"> death every </span><span class="country__data-death-rate"></span></div>
                 </div>
             </div>
@@ -256,7 +270,7 @@
         // find name icon div and place content
         const nameEl = el.querySelector('.country__info-name');
         nameEl.innerText = name;
-        
+
         CONTAINER.appendChild(el);
 
         setTimeout(() => {
@@ -278,6 +292,7 @@
 
     function updateCurrentRate(country, current_rate, rate_type='case') {
         const el = CONTAINER.querySelector('#' + country.toLowerCase());
+
         // set case values
         const caseMinuteEl = el.querySelector('.country__data-' + rate_type + '-minutes');
         const caseRateEl = el.querySelector('.country__data-' + rate_type + '-rate');
@@ -338,10 +353,12 @@
                 const country = processedCountries[i];
                 const countryEl = CONTAINER.querySelector(`#${country.safe_name}`);
                 const casesEl = countryEl.querySelector('.country__data-cases');
+                const casesTextEl = countryEl.querySelector('.country__data-cases-text');
                 const deathsEl = countryEl.querySelector('.country__data-deaths');
+                const deathsTextEl = countryEl.querySelector('.country__data-deaths-text');
 
-                build_case_bar(casesEl, country);
-                build_death_bar(deathsEl, country);
+                build_bar(casesEl, casesTextEl, country, 'case');
+                build_bar(deathsEl, deathsTextEl, country, 'death');
             }
         }, 0)
     }
@@ -362,40 +379,6 @@
         el.dataset[rate_type + 'Count'] = current_count;
         el.dataset[rate_type + 'Rate'] = current_rate;
         el.dataset['name'] = country;
-    }
-
-    /**** Bar Callback ****/
-    function bar_callback(bar, country, rate_type='case') {
-        var calculations = processCountryData(country);
-        if (rate_type == 'case'){
-            playAudio('confirmed');
-            if (calculations.current_case_rate <= 0){
-                bar.setText(country.latest_confirmed_count);
-                bar.set(0);
-                updateCurrentRate(country.safe_name, country.latest_confirmed_count, 'case');
-                update_data_fields(country.safe_name, country.latest_confirmed_count, 0, 'case');
-            } else {
-                bar.setText(Math.floor(calculations.current_cases));
-                bar.set(calculations.current_case_progress);
-                updateCurrentRate(country.safe_name, country.current_case_rate, 'case');
-                update_data_fields(country.safe_name, calculations.current_cases, calculations.current_case_rate, 'case');
-                bar.animate(1.0, {duration: calculations.case_finish_time}, function(){bar_callback(bar, country, rate_type)});
-            }
-        } else if (rate_type == 'death') {
-            playAudio('death');
-            if (calculations.current_death_rate <= 0){
-                bar.setText(country.latest_death_count);
-                bar.set(0);
-                updateCurrentRate(country.safe_name, country.latest_death_count, 'death');
-                update_data_fields(country.safe_name, country.latest_death_count, 0, 'case');
-            } else {
-                bar.setText(Math.floor(calculations.current_deaths));
-                bar.set(calculations.current_death_progress);
-                updateCurrentRate(country.safe_name, calculations.current_death_rate, 'death');
-                update_data_fields(country.safe_name, calculations.current_deaths, calculations.current_death_rate, 'death');
-                bar.animate(1.0, {duration: calculations.death_finish_time}, function(){bar_callback(bar, country, rate_type)});
-            }
-        }
     }
 
     function processCountryData(country) {
@@ -424,14 +407,20 @@
         var death_finish_time = current_death_rate - current_death_progress * current_death_rate;
 
         return {
-            current_cases,
-            current_case_progress,
-            current_case_rate,
-            case_finish_time,
-            current_deaths,
-            current_death_progress,
-            current_death_rate,
-            death_finish_time,
+            case: {
+                current: current_cases,
+                progress: current_case_progress,
+                rate: current_case_rate,
+                finish_time: case_finish_time,
+                confirmed_count: country.latest_confirmed_count
+            },
+            death: {
+                current: current_deaths,
+                progress: current_death_progress,
+                rate: current_death_rate,
+                finish_time: death_finish_time,
+                confirmed_count: country.latest_death_count
+            }
             // Will we need the following:
             // x,
             // t_zero,
@@ -440,94 +429,44 @@
         }
     }
 
-    function build_case_bar(el, country) {
-        const { current_cases, current_case_progress, current_case_rate, case_finish_time } = country;
-        const cases = Math.floor(current_cases);
+    function build_bar(el, text_element, country, type) {
+        const audio_file_name = type === 'case' ? 'confirmed' : 'death';
 
-        const bar = new ProgressBar.Line(el, {
-            strokeWidth: 4,
-            easing: 'linear',
-            duration: 2000,
-            color: '#02A2E8',
-            trailColor: '#eee',
-            trailWidth: 1,
-            svgStyle: {width: '100%', height: '100%'},
-            text: {
-                style: {
-                    // Text color.
-                    // Default: same as stroke color (options.color)
-                    color: '#000',
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    padding: 0,
-                    margin: 0,
-                    transform: {
-                        prefix: true,
-                        value: 'translate(-50%, -50%)'
-                    }
-                },
-                autoStyleContainer: false
-            },
-            from: {color: '#02A2E8'},
-            to: {color: '#7F7F7F'},
-        });
+        const calculations = processCountryData(country);
+        const { safe_name } = country
+        const { current, rate, progress, finish_time, confirmed_count } = calculations[type];
 
-        if (current_case_rate <= 0){
-            bar.setText(country.latest_confirmed_count);
-            bar.set(0);
+        const value = Math.floor(current);
+        
+        updateCurrentRate(safe_name, rate, type);
+        if (rate <= 0)
+        {
+          update_data_fields(safe_name, type === 'case' ? country.latest_confirmed_count : country.latest_death_count, Infinity, type);
         } else {
-            // Do the bar thing.
-            bar.setText(cases);
-            bar.set(current_case_progress);
-            if (case_finish_time >= 0)
-                bar.animate(1.0, {duration: case_finish_time}, function(){bar_callback(bar, country, 'case')});
+          update_data_fields(safe_name, current, rate, type); 
         }
-    };
 
-    function build_death_bar(el, country) {
-        const { current_deaths, current_death_progress, current_death_rate, death_finish_time } = country;
-        const deaths = Math.floor(current_deaths);
+        if (!Number.isFinite(rate) || rate <= 0) {
+            text_element.innerText = confirmed_count;
+            el.value = 0;
+            return
+        }
 
-        const bar = new ProgressBar.Line(el, {
-            strokeWidth: 4,
-            easing: 'linear',
-            duration: 2000,
-            color: '#f33',
-            trailColor: '#eee',
-            trailWidth: 1,
-            svgStyle: {width: '100%', height: '100%'},
-            text: {
-                style: {
-                    // Text color.
-                    // Default: same as stroke color (options.color)
-                    color: '#000',
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    padding: 0,
-                    margin: 0,
-                    transform: {
-                        prefix: true,
-                        value: 'translate(-50%, -50%)'
-                    }
-                },
-                autoStyleContainer: false
-            },
-            from: {color: '#02A2E8'},
-            to: {color: '#7F7F7F'},
+        el.value = progress * 100;
+        text_element.innerText = value;
+
+        shifty.tween({
+            from: { x: progress },
+            to: { x: 1 },
+            duration: finish_time,
+            step: (state) => {
+                el.value = state.x;
+            }
+        }).then(state => {
+            playAudio(audio_file_name);
+            el.value = state.x;
+            build_bar(el, text_element, country, type)
         });
-
-        if (current_death_rate <= 0){
-            bar.setText(country.latest_death_count);
-            bar.set(0);
-        } else {
-            // Do the bar thing.
-            bar.setText(deaths);
-            bar.set(current_death_progress);
-            if (death_finish_time >= 0)
-                bar.animate(1.0, {duration: death_finish_time}, function(){bar_callback(bar, country, 'death')});
-        }
     };
 
     function sort_elements(attribute, parent_element_id, filter, depth=0, multiplier = 1.0, discrete=false) {
