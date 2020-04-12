@@ -57,6 +57,8 @@ def update_confirmed_stats():
             confirmed_formula_model.d = popt[3]
         confirmed_formula_model.save()
         country_model.confirmed_formula = confirmed_formula_model
+        country_model.t_zero = START_DATE
+        country_model.save()
         
         for index, row in group.iterrows():
             filter_result = country_model.confirmed.filter(date=index.date())
@@ -69,7 +71,6 @@ def update_confirmed_stats():
                 # Oh my god this is so slow for new entries
                 entry_model = Entry.objects.create(date=index.date(), value=row['Confirmed'])
             country_model.confirmed.add(entry_model)
-        country_model.t_zero = START_DATE
         country_model.save()
     
     logging.debug("Done!")
@@ -123,7 +124,9 @@ def update_death_stats():
             death_formula_model.d = popt[3]
         death_formula_model.save()
         country_model.death_formula = death_formula_model
-        
+        country_model.t_zero = START_DATE
+        country_model.save()
+
         for index, row in group.iterrows():
             filter_result = country_model.death.filter(date=index.date())
             if filter_result:
@@ -135,7 +138,6 @@ def update_death_stats():
                 # Oh my god this is so slow for new entries
                 entry_model = Entry.objects.create(date=index.date(), value=row['Deaths'])
             country_model.death.add(entry_model)
-        country_model.t_zero = START_DATE
         country_model.save()
     
     logging.debug("Done!")
