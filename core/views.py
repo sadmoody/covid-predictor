@@ -24,3 +24,8 @@ def index(request):
     template = loader.get_template('core/base.html')
     context = {}
     return HttpResponse(template.render(context, request))
+
+def animals(request):
+    template = loader.get_template('core/animals.html')
+    context = {}
+    return HttpResponse(template.render(context, request))

@@ -113,11 +113,25 @@
         width:50px;
         height: 50px;
     }
+
+    #anxiety-modal { 
+        position: fixed; 
+        bottom:0%;
+        left:0%;
+        width:45%;
+        background-color: #FFFFFF; 
+        z-index:10000;
+        margin-left: 10px;
+        margin-bottom: 10px;
+    }
 </style>
 </head>
 <body data-loading="true">   
 <div id="sound" class="nes-container is-rounded">
   <img class="pixelated" id="sound-control" src="{% static 'images/ui/mute.png' %}" />
+</div> 
+<div id="anxiety-modal" class="nes-container is-rounded">
+  <p><a href="/animals">Feeling anxious? Click here</a></p>
 </div> 
 <div id="container">
     <div class="row" id="top-container">
