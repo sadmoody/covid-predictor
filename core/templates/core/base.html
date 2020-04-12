@@ -10,6 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 <style>
     * {
         position: relative;
@@ -97,22 +98,40 @@
     .nes-select {
         padding: 1.5rem 0.5rem;
     }
+
+    #sound { 
+        position: fixed; 
+        bottom:0%;
+        right:0%;
+        background-color: #FFFFFF; 
+        z-index:10000;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+
+    #sound-control {
+        width:50px;
+        height: 50px;
+    }
 </style>
 </head>
-<body data-loading="true">    
+<body data-loading="true">   
+<div id="sound" class="nes-container is-rounded">
+  <img class="pixelated" id="sound-control" src="{% static 'images/ui/mute.png' %}" />
+</div> 
 <div id="container">
     <div class="row" id="top-container">
-        <div class="col-sm-12 col-md-6 col-lg-6 col-xl-8">
-            <h1>Covid-19 Loader</h1>
+        <div class="col-sm-12 col-md-6 col-lg-6 col-xl-8" style="display: flex; align-items: center; justify-content: center;">
+            <h2 style="test-align: center;">Covid-19 Loader</h2>
         </div>
         <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
             <div class="nes-select">
                 <select required id="sort-selector" disabled>
-                    <option value="name" selected>Alphabetical</option>
-                    <option value="caseCount">Most Cases</option>
-                    <option value="deathCount">Most Deaths</option>
-                    <option value="caseRate">Fastest Case Rate</option>
-                    <option value="deathRate">Fastest Death Rate</option>
+                    <option value="name">Alphabetical</option>
+                    <option value="caseCount">Cases</option>
+                    <option value="caseRate" selected>Case Rate</option>
+                    <option value="deathCount">Deaths</option>
+                    <option value="deathRate">Death Rate</option>
                 </select>
             </div>
         </div>
@@ -166,12 +185,19 @@
 
     //TODO: Pool audio objects so they can be played in parallel
     //          create new object if all current objects are busy
-    const confirmed_audio = new Audio('{% static "sounds/confirmed.wav" %}');
+    const confirmed_audio = new Audio('{% static "sounds/case.wav" %}');
     var confirmed_audio_pool = [confirmed_audio];
     const death_audio = new Audio('{% static "sounds/death.wav" %}');
     var death_audio_pool = [death_audio];
 
+    var soundEnabled = true;
+    var unmuteImage = "{% static 'images/ui/mute.png' %}";
+    var muteImage = "{% static 'images/ui/unmute.png' %}";
+
+
     function playAudio(event){
+        if (!soundEnabled)
+            return;
         var ready_audio;
         if (event == 'confirmed') {
             for (var i = 0; i< confirmed_audio_pool.length; i++)
@@ -331,17 +357,17 @@
         const SORT_SELECTOR = document.querySelector('#sort-selector');
         /* 1. get list of countries, country info and lookup table info */
         LOADING_BAR.value = 10;
-        LOADING_TEXT.innerText = 'loading countries';
+        LOADING_TEXT.innerText = 'loading...';
         const countries = await covidFetch();
         LOADING_BAR.value = 30;
-        LOADING_TEXT.innerText = 'gathering additional country informtion';
+        LOADING_TEXT.innerText = 'thinking...';
         const countryInfo = await metaCountryInfo();
         LOADING_BAR.value = 50;
-        LOADING_TEXT.innerText = 'wait there is more country info?';
+        LOADING_TEXT.innerText = 'processing...';
         const lookupTableData = await covidCountryLookUpTable();
 
         LOADING_BAR.value = 70;
-        LOADING_TEXT.innerText = 'ok, almost there. have to process data';
+        LOADING_TEXT.innerText = 'doing.';
         /* 2. Compose the appropriate information together from both countries and countryInfo */
         const processedCountries = countries.map(country => {
             // set default return values
@@ -370,12 +396,12 @@
 
         /* 3. Create country elements */
         LOADING_BAR.value = 85;
-        LOADING_TEXT.innerText = 'lets add the data to the page';
+        LOADING_TEXT.innerText = 'doing..';
         processedCountries.forEach(createCountryElementAndAppend);
 
         /* 4. Wait for next dom render to attach bar */
         LOADING_BAR.value = 90;
-        LOADING_TEXT.innerText = 'almost there. just have to animate and enable things...';
+        LOADING_TEXT.innerText = 'doing...';
         setTimeout(() => {
             for (let i = 0; i < processedCountries.length; i++) {
                 const country = processedCountries[i];
@@ -388,6 +414,8 @@
                 build_bar(casesEl, casesTextEl, country, 'case');
                 build_bar(deathsEl, deathsTextEl, country, 'death');
             }
+
+            sort_elements('caseRate', 'country-container', '.country-outer .country', depth=1, multiplier=1.0);
 
             LOADING_BAR.value = 100;
             SORT_SELECTOR.disabled = false;
@@ -526,6 +554,13 @@
                 currentNode = currentNode.parentNode;
             parent_element.appendChild(currentNode);    
         }
+    }
+
+    document.getElementById("sound-control").onclick = soundControlListener;
+
+    function soundControlListener() {
+        soundEnabled = !soundEnabled;
+        document.getElementById("sound-control").src = soundEnabled ? muteImage : unmuteImage;
     }
 
     document.getElementById("sort-selector").onchange = changeListener;
