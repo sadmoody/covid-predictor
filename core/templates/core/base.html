@@ -118,7 +118,6 @@
         position: fixed; 
         bottom:0%;
         left:0%;
-        width:45%;
         background-color: #FFFFFF; 
         z-index:10000;
         margin-left: 10px;
@@ -128,10 +127,10 @@
 </head>
 <body data-loading="true">   
 <div id="sound" class="nes-container is-rounded">
-  <img class="pixelated" id="sound-control" src="{% static 'images/ui/mute.png' %}" />
+  <img class="pixelated" id="sound-control" src="{% static 'images/ui/unmute.png' %}" />
 </div> 
 <div id="anxiety-modal" class="nes-container is-rounded">
-  <p><a href="/animals">Feeling anxious? Click here</a></p>
+  <p><a href="/animals">Feeling anxious?</a></p>
 </div> 
 <div id="container">
     <div class="row" id="top-container">
@@ -156,7 +155,7 @@
                 <p class="title">Loading...</p>
                 <div>
                     <progress id="loading-bar" class="nes-progress is-primary" value="1" max="100"></progress>
-                    <div id="loading-text">Making a few quick queries</div>
+                    <div id="loading-text">Loading...</div>
                 </div>
             </div>
         </div>
