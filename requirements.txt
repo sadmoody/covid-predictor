@@ -7,3 +7,5 @@ apscheduler
 djangorestframework
 markdown
 django-filter
+django-storages
+boto3
