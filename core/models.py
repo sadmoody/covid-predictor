@@ -6,10 +6,10 @@ class Entry(models.Model):
     value = models.IntegerField()
 
 class Formula(models.Model):
-    a = models.FloatField()
-    b = models.FloatField()
-    c = models.FloatField()
-    d = models.FloatField()
+    a = models.DecimalField(max_digits=15, decimal_places=5)
+    b = models.DecimalField(max_digits=15, decimal_places=5)
+    c = models.DecimalField(max_digits=15, decimal_places=5)
+    d = models.DecimalField(max_digits=15, decimal_places=5)
 
 class Country(models.Model):
     name = models.CharField(max_length=100, unique=True)
