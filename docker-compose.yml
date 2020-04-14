@@ -10,7 +10,7 @@ services:
       - pgdata:/var/lib/postgresql/data/pgdata
   web:
     build: .
-    command: python manage.py runserver --noreload 0.0.0.0:8000
+    command: bash -c "while ! nc -w 1 -z db 5432; do sleep 0.1; done; python manage.py makemigrations all; python manage.py makemigrations core; python manage.py migrate; while :; do python manage.py runserver --noreload 0.0.0.0:8000; sleep 1; done"
     volumes:
       - .:/code
     ports:
