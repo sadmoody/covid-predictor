@@ -126,6 +126,34 @@
         margin-left: 10px;
         margin-bottom: 10px;
     }
+
+    #dark-mode-button .nes-badge__text {
+        width: auto;
+    }
+
+    .dark {
+        background-color: #212529;
+        color: #fff;
+    }
+
+    .dark #loading-text,
+    .dark .country__data-cases-text,
+    .dark .country__data-deaths-text {
+        color: #000;
+    }
+
+    .dark .country__info-emoji img{
+        border-color: #fff;
+    }
+
+    .dark .nes-progress {
+        border-image-source: url('data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8" ?><svg version="1.1" width="5" height="5" xmlns="http://www.w3.org/2000/svg"><path d="M2 1 h1 v1 h-1 z M1 2 h1 v1 h-1 z M3 2 h1 v1 h-1 z M2 3 h1 v1 h-1 z" fill="rgb(255,255,255)" /></svg>');
+    }
+    
+    .dark #sound,
+    .dark #anxiety-modal {
+        background-color: #212529;
+    }
 </style>
 </head>
 <body data-loading="true">   
@@ -152,6 +180,12 @@
                     <option value="deathRate">Death Rate</option>
                 </select>
             </div>
+        </div>
+        <div class="col mr-5 mt-3 text-right">
+            <a id="dark-mode-button" class="nes-badge is-icon">
+                <span class="nes-badge__badge is-primary">off</span>
+                <span class="nes-badge__text is-warning">dark mode</span>
+            </a>
         </div>
     </div>
     <div class="row" id="loading">
@@ -200,6 +234,43 @@
 
 <script>
     const CONTAINER = document.querySelector('#country-container');
+    let USER_COLOR_MODE = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const dark_mode_button = document.querySelector('#dark-mode-button');
+    dark_mode_button.addEventListener('click', () => {
+        USER_COLOR_MODE = !USER_COLOR_MODE;
+        update_color_mode(USER_COLOR_MODE);
+    })
+
+    const update_color_mode = (isDark) => {
+        const dark_mode_badge_icon = dark_mode_button.querySelector('.nes-badge__badge');
+        const containers = document.querySelectorAll('.nes-container');
+        const selects = document.querySelectorAll('.nes-select');
+
+        if (isDark) {
+            document.body.classList.add('dark');
+            dark_mode_badge_icon.innerText = 'on';
+            const addDarkClass = (el) => {
+                el.classList.add('is-dark');
+            }
+            
+            containers.forEach(addDarkClass);
+            selects.forEach(addDarkClass);
+        } else {
+            document.body.classList.remove('dark');
+            dark_mode_badge_icon.innerText = 'off';
+            
+            const removeDarkClass = (el) => {
+                el.classList.remove('is-dark');
+            }
+            
+            containers.forEach(removeDarkClass);
+            selects.forEach(removeDarkClass);
+        }
+    }
+
+    if (USER_COLOR_MODE) {
+        update_color_mode(true);
+    }    
 
     //TODO: Pool audio objects so they can be played in parallel
     //          create new object if all current objects are busy
@@ -343,6 +414,10 @@
         // find name icon div and place content
         const nameEl = el.querySelector('.country__info-name');
         nameEl.innerText = name;
+
+        if (USER_COLOR_MODE) {
+            container.classList.add('is-dark');
+        }
 
         CONTAINER.appendChild(el);        
     }
