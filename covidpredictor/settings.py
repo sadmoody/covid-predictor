@@ -138,7 +138,6 @@ import importlib
 aws_secrets = importlib.util.find_spec("covidpredictor.aws_secrets")
 if (aws_secrets is not None):
     import covidpredictor.aws_secrets as aws_secrets
-    print("It's ok!")
     AWS_STORAGE_BUCKET_NAME = aws_secrets.BUCKET_NAME
     AWS_S3_REGION_NAME = aws_secrets.REGION_NAME
     AWS_ACCESS_KEY_ID = aws_secrets.ACCESS_KEY_ID
@@ -149,7 +148,7 @@ if (aws_secrets is not None):
 
     STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
-    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+    
 
     AWS_S3_OBJECT_PARAMETERS = {
         'Expires': 'Thu, 31 Dec 2099 20:00:00 GMT',
@@ -157,7 +156,7 @@ if (aws_secrets is not None):
     }
     STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 else:
-    STATIC_URL = '/static/'
+    STATIC_URL = f'https://cdn.jsdelivr.net/gh/sadmoody/covid-predictor@master/static/'
     STATICFILES_DIRS = [
         os.path.join(BASE_DIR, "static")
-    ]
+    ]    
