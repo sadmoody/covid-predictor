@@ -3,3 +3,4 @@ __pycache__
 migrations
 *.pyc
 *aws_secrets.py
+production.env

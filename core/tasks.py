@@ -14,6 +14,8 @@ def update_confirmed_stats():
     START_DATE = datetime.datetime.now(datetime.timezone.utc).date() - datetime.timedelta(days=14)
     END_DATE = START_DATE + datetime.timedelta(days=14)
     GRAPH_SHAPE = poly_three
+    DEGREES = 3
+    ROOT_THRESHOLD = 0.5
     date_range = pd.date_range(START_DATE, END_DATE) 
 
     logging.debug("Downloading and reading latest data")
@@ -43,18 +45,33 @@ def update_confirmed_stats():
         filtered_df = group[group.index.isin(date_range)]
         ydata = filtered_df['Confirmed'].to_numpy()
         xdata = filtered_df['x'].to_numpy()
-        popt, pcov = curve_fit(GRAPH_SHAPE, xdata, ydata)
+        for x in range(DEGREES,0,-1):
+            coeff = np.polyfit(xdata, ydata, x)
+            der_coeff = np.polyder(coeff)
+            der_roots = np.roots(der_coeff)
+            roots_at_end = False
+            for root in der_roots:
+                if np.isreal(root):
+                    diff_low = abs(root - xdata[0])
+                    diff_high = abs(root - xdata[len(xdata)-1])
+                    if (diff_low >= ROOT_THRESHOLD or diff_high >= ROOT_THRESHOLD):
+                        roots_at_end = True
+            if roots_at_end:
+                continue
+            else:
+                padded_coeff = np.pad(coeff,(DEGREES+1-len(coeff),0), constant_values=0)
+                break
         lat = group['Lat'].iloc[0]
         long = group['Long'].iloc[0]
         country_model, created = Country.objects.get_or_create(name=name, defaults={ 'lat':lat, 'long':long})
         if country_model.confirmed_formula is None:
-            confirmed_formula_model = Formula.objects.create(a=popt[0],b=popt[1],c=popt[2],d=popt[3])
+            confirmed_formula_model = Formula.objects.create(a=padded_coeff[0],b=padded_coeff[1],c=padded_coeff[2],d=padded_coeff[3])
         else:
             confirmed_formula_model = country_model.confirmed_formula
-            confirmed_formula_model.a = popt[0]
-            confirmed_formula_model.b = popt[1]
-            confirmed_formula_model.c = popt[2]
-            confirmed_formula_model.d = popt[3]
+            confirmed_formula_model.a = padded_coeff[0]
+            confirmed_formula_model.b = padded_coeff[1]
+            confirmed_formula_model.c = padded_coeff[2]
+            confirmed_formula_model.d = padded_coeff[3]
         confirmed_formula_model.save()
         country_model.confirmed_formula = confirmed_formula_model
         country_model.t_zero = START_DATE
@@ -81,6 +98,8 @@ def update_death_stats():
     START_DATE = datetime.datetime.now(datetime.timezone.utc).date() - datetime.timedelta(days=14)
     END_DATE = START_DATE + datetime.timedelta(days=14)
     GRAPH_SHAPE = poly_three
+    DEGREES = 3
+    ROOT_THRESHOLD = 0.5
     date_range = pd.date_range(START_DATE, END_DATE) 
 
     logging.debug("Downloading and reading latest data")
@@ -110,18 +129,33 @@ def update_death_stats():
         filtered_df = group[group.index.isin(date_range)]
         ydata = filtered_df['Deaths'].to_numpy()
         xdata = filtered_df['x'].to_numpy()
-        popt, pcov = curve_fit(GRAPH_SHAPE, xdata, ydata)
+        for x in range(DEGREES,0,-1):
+            coeff = np.polyfit(xdata, ydata, x)
+            der_coeff = np.polyder(coeff)
+            der_roots = np.roots(der_coeff)
+            roots_at_end = False
+            for root in der_roots:
+                if np.isreal(root):
+                    diff_low = abs(root - xdata[0])
+                    diff_high = abs(root - xdata[len(xdata)-1])
+                    if (diff_low >= ROOT_THRESHOLD or diff_high >= ROOT_THRESHOLD):
+                        roots_at_end = True
+            if roots_at_end:
+                continue
+            else:
+                padded_coeff = np.pad(coeff,(DEGREES+1-len(coeff),0), constant_values=0)
+                break
         lat = group['Lat'].iloc[0]
         long = group['Long'].iloc[0]
         country_model, created = Country.objects.get_or_create(name=name, defaults={ 'lat':lat, 'long':long})
         if country_model.death_formula is None:
-            death_formula_model = Formula.objects.create(a=popt[0],b=popt[1],c=popt[2],d=popt[3])
+            death_formula_model = Formula.objects.create(a=padded_coeff[0],b=padded_coeff[1],c=padded_coeff[2],d=padded_coeff[3])
         else:
             death_formula_model = country_model.death_formula
-            death_formula_model.a = popt[0]
-            death_formula_model.b = popt[1]
-            death_formula_model.c = popt[2]
-            death_formula_model.d = popt[3]
+            death_formula_model.a = padded_coeff[0]
+            death_formula_model.b = padded_coeff[1]
+            death_formula_model.c = padded_coeff[2]
+            death_formula_model.d = padded_coeff[3]
         death_formula_model.save()
         country_model.death_formula = death_formula_model
         country_model.t_zero = START_DATE

@@ -9,7 +9,7 @@ class Formula(models.Model):
     a = models.DecimalField(max_digits=15, decimal_places=5)
     b = models.DecimalField(max_digits=15, decimal_places=5)
     c = models.DecimalField(max_digits=15, decimal_places=5)
-    d = models.DecimalField(max_digits=15, decimal_places=5)
+    d = models.DecimalField(max_digits=15, decimal_places=5, default=0.0)
 
 class Country(models.Model):
     name = models.CharField(max_length=100, unique=True)
