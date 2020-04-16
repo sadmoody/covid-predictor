@@ -139,7 +139,7 @@
     .dark #loading-text,
     .dark .country__data-cases-text,
     .dark .country__data-deaths-text {
-        color: #000;
+        color: #fff;
     }
 
     .dark .country__info-emoji img{
@@ -152,6 +152,25 @@
     
     .dark #sound,
     .dark #anxiety-modal {
+        background-color: #212529;
+    }
+
+    .dark #sound-control {
+        filter: invert(0.75);
+    }
+
+    .dark progress.nes-progress {
+        -webkit-appearance: none;
+        background-color: #212529;
+    }
+
+    .dark progress.nes-progress::-webkit-progress-bar {
+        background-color: #212529;
+    }
+    .dark progress.nes-progress::-moz-progress-bar {
+        background-color: #212529;
+    }
+    .dark progress.nes-progress::-ms-fill {
         background-color: #212529;
     }
 </style>
