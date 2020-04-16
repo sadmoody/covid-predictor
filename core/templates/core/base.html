@@ -577,7 +577,7 @@
         var current_date = new Date().getTime();
         var t_zero = Date.UTC(t_zero_array[0], t_zero_array[1]-1, t_zero_array[2])
         // Represent time in decimal days from last dataset update
-        var x = (current_date - t_zero) / 1000 / 3600 / 24;
+        var x = ((current_date - t_zero) / 1000 / 3600 / 24) - 1;
         // Get current number of cases by applying third order polynomial
         var current_cases = poly_three(x, country.confirmed_formula);
         // Get current fraction of cases (so that we can start our progress bar in the right place)
