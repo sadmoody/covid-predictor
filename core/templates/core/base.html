@@ -2,6 +2,7 @@
 <!doctype html>
 <html>
 <head>
+<title>Covid-19 Loader</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 <script src="https://rawgit.com/jeremyckahn/shifty/gh-pages/shifty.js" crossorigin="anonymous"></script>
@@ -201,11 +202,27 @@
             </div>
         </div>
         <div class="col mr-5 mt-3 text-right">
+            <!--<a class="nes-badge is-icon" onclick="document.getElementById('dialog-default').showModal();">
+                about
+            </a>-->
             <a id="dark-mode-button" class="nes-badge is-icon">
                 <span class="nes-badge__badge is-primary">off</span>
                 <span class="nes-badge__text is-warning">dark mode</span>
             </a>
         </div>
+        <!--<dialog class="nes-dialog" id="dialog-default">
+            <form method="dialog">
+            <p class="title">About</p>
+            <p>Visualising large numbers isn't very easy for humans. This site is made so that the speed of Covid-19 spread can be easier interpreted by humans.</p>
+            <p>We use curve fitting of the previous 14 days' worth of data to estimate the current state of the world. What you're seeing right now is the predicted state of Covid-19 spread.</p>
+            <p>This website was built live on Twitch by sadmoody</p>
+            <p>The source can be found on github</p>
+            <p>Thanks so much to vinny_code for putting in a serious chunk of work on the front-end. Couldn't have done it without you.</p>
+            <menu class="dialog-menu">
+                <button class="nes-btn is-primary">Back to the Site</button>
+            </menu>
+            </form>
+        </dialog>-->
     </div>
     <div class="row" id="loading">
         <div class="col">
