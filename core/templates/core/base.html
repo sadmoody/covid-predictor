@@ -644,6 +644,8 @@
         el.value = progress * 100;
         text_element.innerText = value;
 
+        start = new Date().getTime();
+
         shifty.tween({
             from: { x: progress },
             to: { x: 1 },
@@ -652,7 +654,8 @@
                 el.value = state.x;
             }
         }).then(state => {
-            playAudio(audio_file_name);
+            if (document.hasFocus())
+                playAudio(audio_file_name);
             el.value = state.x;
             build_bar(el, text_element, country, type)
         });
@@ -690,7 +693,6 @@
 
     function soundControlListener() {
         soundEnabled = !soundEnabled;
-        console.log(soundEnabled.toString());
         window.localStorage.setItem('soundEnabled', soundEnabled.toString());
         document.getElementById("sound-control").src = soundEnabled ? unmuteImage : muteImage;
     }
