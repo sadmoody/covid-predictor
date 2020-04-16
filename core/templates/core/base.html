@@ -298,10 +298,10 @@
     const death_audio = new Audio('{% static "sounds/death.mp3" %}');
     var death_audio_pool = [death_audio];
 
-    var soundEnabled = true;
-    var unmuteImage = "{% static 'images/ui/mute.png' %}";
-    var muteImage = "{% static 'images/ui/unmute.png' %}";
-
+    var soundEnabled = !(window.localStorage.getItem('soundEnabled') == 'false');
+    var unmuteImage = "{% static 'images/ui/unmute.png' %}";
+    var muteImage = "{% static 'images/ui/mute.png' %}";
+    window.localStorage.setItem('soundEnabled', soundEnabled.toString());
 
     function playAudio(event){
         if (!soundEnabled)
@@ -464,6 +464,7 @@
     }
 
     window.onload = async function () {
+        document.getElementById("sound-control").src = (soundEnabled ? unmuteImage : muteImage);
         const LOADING_BAR = document.querySelector('#loading-bar');
         const LOADING_TEXT = document.querySelector('#loading-text');
         const SORT_SELECTOR = document.querySelector('#sort-selector');
@@ -672,7 +673,9 @@
 
     function soundControlListener() {
         soundEnabled = !soundEnabled;
-        document.getElementById("sound-control").src = soundEnabled ? muteImage : unmuteImage;
+        console.log(soundEnabled.toString());
+        window.localStorage.setItem('soundEnabled', soundEnabled.toString());
+        document.getElementById("sound-control").src = soundEnabled ? unmuteImage : muteImage;
     }
 
     document.getElementById("sort-selector").onchange = changeListener;
