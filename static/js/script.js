@@ -46,9 +46,9 @@ if (USER_COLOR_MODE) {
 //TODO: Pool audio objects so they can be played in parallel
 //          create new object if all current objects are busy
 const confirmed_audio = STATIC_URL + "sounds/case.mp3";
-var confirmed_audio_pool = [new Howl({src: [confirmed_audio]})];
+var confirmed_audio_pool = [new Howl({src: [confirmed_audio], volume:0.5})];
 const death_audio = STATIC_URL + "sounds/death.mp3";
-var death_audio_pool = [new Howl({src: [death_audio]})];
+var death_audio_pool = [new Howl({src: [death_audio], volume:0.5})];
 
 var soundEnabled = !(window.localStorage.getItem('soundEnabled') == 'false');
 var unmuteImage = STATIC_URL + "images/ui/unmute.png";
@@ -69,7 +69,7 @@ function playAudio(event){
             }
         }
         if (ready_audio == null){
-            ready_audio = new Howl({src: confirmed_audio})
+            ready_audio = new Howl({src: [confirmed_audio], volume:0.5})
             confirmed_audio_pool.push(ready_audio);
         }
     } else if (event == 'death') {
@@ -82,7 +82,7 @@ function playAudio(event){
             }
         }
         if (ready_audio == null){
-            ready_audio = new Howl({src: death_audio});
+            ready_audio = new Howl({src: [death_audio], volume:0.5});
             death_audio_pool.push(ready_audio);
         }
     }
