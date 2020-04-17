@@ -15,7 +15,7 @@ def update_confirmed_stats():
     END_DATE = START_DATE + datetime.timedelta(days=14)
     GRAPH_SHAPE = poly_three
     DEGREES = 3
-    ROOT_THRESHOLD = 0.5
+    ROOT_THRESHOLD = 0.2
     date_range = pd.date_range(START_DATE, END_DATE) 
 
     logging.debug("Downloading and reading latest data")
@@ -54,7 +54,7 @@ def update_confirmed_stats():
                 if np.isreal(root):
                     diff_low = abs(root - xdata[0])
                     diff_high = abs(root - xdata[len(xdata)-1])
-                    if (diff_low >= ROOT_THRESHOLD or diff_high >= ROOT_THRESHOLD):
+                    if (diff_low <= ROOT_THRESHOLD or diff_high <= ROOT_THRESHOLD):
                         roots_at_end = True
             if roots_at_end:
                 continue
@@ -99,7 +99,7 @@ def update_death_stats():
     END_DATE = START_DATE + datetime.timedelta(days=14)
     GRAPH_SHAPE = poly_three
     DEGREES = 3
-    ROOT_THRESHOLD = 0.5
+    ROOT_THRESHOLD = 0.2
     date_range = pd.date_range(START_DATE, END_DATE) 
 
     logging.debug("Downloading and reading latest data")
@@ -138,7 +138,7 @@ def update_death_stats():
                 if np.isreal(root):
                     diff_low = abs(root - xdata[0])
                     diff_high = abs(root - xdata[len(xdata)-1])
-                    if (diff_low >= ROOT_THRESHOLD or diff_high >= ROOT_THRESHOLD):
+                    if (diff_low <= ROOT_THRESHOLD or diff_high <= ROOT_THRESHOLD):
                         roots_at_end = True
             if roots_at_end:
                 continue
