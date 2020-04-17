@@ -1,7 +1,7 @@
 var this_js_script = $('script[src*=somefile]');
 var STATIC_URL = this_js_script.attr('static-url');
 if (typeof STATIC_URL === "undefined" ) {
-    var STATIC_URL = 'https://cdn.jsdelivr.net/gh/sadmoody/covid-predictor@master/static/';
+    var STATIC_URL = 'https://cdn.jsdelivr.net/gh/sadmoody/covid-predictor@latest/static/';
 }
 
 const CONTAINER = document.querySelector('#country-container');
