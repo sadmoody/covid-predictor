@@ -1,3 +1,9 @@
+var this_js_script = $('script[src*=somefile]');
+var STATIC_URL = this_js_script.attr('static-url');
+if (typeof STATIC_URL === "undefined" ) {
+    var STATIC_URL = 'https://cdn.jsdelivr.net/gh/sadmoody/covid-predictor@master/static/';
+}
+
 const CONTAINER = document.querySelector('#country-container');
 let USER_COLOR_MODE = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 const dark_mode_button = document.querySelector('#dark-mode-button');
@@ -39,14 +45,14 @@ if (USER_COLOR_MODE) {
 
 //TODO: Pool audio objects so they can be played in parallel
 //          create new object if all current objects are busy
-const confirmed_audio = '{% static "sounds/case.mp3" %}';
+const confirmed_audio = STATIC_URL + "sounds/case.mp3";
 var confirmed_audio_pool = [new Howl({src: [confirmed_audio]})];
-const death_audio = '{% static "sounds/death.mp3" %}';
+const death_audio = STATIC_URL + "sounds/death.mp3";
 var death_audio_pool = [new Howl({src: [death_audio]})];
 
 var soundEnabled = !(window.localStorage.getItem('soundEnabled') == 'false');
-var unmuteImage = "{% static 'images/ui/unmute.png' %}";
-var muteImage = "{% static 'images/ui/mute.png' %}";
+var unmuteImage = STATIC_URL + "images/ui/unmute.png";
+var muteImage = STATIC_URL + "images/ui/mute.png";
 window.localStorage.setItem('soundEnabled', soundEnabled.toString());
 
 function playAudio(event){
@@ -175,7 +181,7 @@ const createCountryElementAndAppend = (country) => {
     
     // find emoji icon div and place content
     const emojiEl = el.querySelector('.country__info-emoji');
-    emojiEl.innerHTML = "<img class=\"pixelated\" src=\"{% static "images/flags/" %}"+name.toLowerCase()+".png\" />";
+    emojiEl.innerHTML = "<img class=\"pixelated\" src=\"" + STATIC_URL + "images/flags/"+name.toLowerCase()+".png\" />";
     // find name icon div and place content
     const nameEl = el.querySelector('.country__info-name');
     nameEl.innerText = name;
