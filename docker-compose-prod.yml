@@ -20,10 +20,10 @@ services:
     depends_on:
       - db
   nginx:
-    build: ./nginx
+    image: nginx:1.15-alpine
     ports:
-      - 80:80
-      - 443:443
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - ./certbot/conf:/etc/letsencrypt
