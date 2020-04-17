@@ -7,3 +7,5 @@ RUN apt-get update
 RUN apt-get install netcat -y bash
 RUN pip install -r requirements.txt
 COPY . /code/
+# run entrypoint.sh
+ENTRYPOINT ["./entrypoint.sh"]

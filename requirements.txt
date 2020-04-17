@@ -9,3 +9,4 @@ markdown
 django-filter
 django-storages
 boto3
+gunicorn==19.9.0

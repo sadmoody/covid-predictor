@@ -14,7 +14,7 @@ services:
     env_file: 
       - development.env
     build: .
-    command: bash -c "while ! nc -w 1 -z db 5432; do sleep 0.1; done; python manage.py makemigrations; python manage.py makemigrations core; python manage.py migrate; while :; do python manage.py runserver --noreload 0.0.0.0:8000; sleep 1; done"
+    command: python manage.py runserver --noreload 0.0.0.0:8000
     volumes:
       - .:/code
     ports:

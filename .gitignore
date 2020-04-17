@@ -4,3 +4,4 @@ migrations
 *.pyc
 *aws_secrets.py
 production.env
+certbot/
