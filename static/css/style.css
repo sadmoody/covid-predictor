@@ -1,0 +1,168 @@
+* {
+    position: relative;
+    font-family: 'Press Start 2P', cursive;
+}
+
+body[data-loading="true"] #country-container {
+    visibility: hidden;
+}
+
+body[data-loading="false"] #loading {
+    display: none;
+}
+
+#loading-text {
+    position: absolute;
+    text-align: center;
+    top: 15px;
+    width: 100%;
+}
+
+#container {
+    margin: 30px;
+}
+
+.country {
+    display: inline-block;
+}
+
+.country-outer {
+    padding:5px;
+}
+
+.country__container {
+    display: flex;
+}
+
+.country__info {
+    font-size: 15px;
+}
+
+.country__info-emoji {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.country__info-emoji img{
+    width: 100%;
+    border-color: #000;
+    border-style: solid;
+    border-width: 4px;
+}
+
+.country__data {
+    display: inline-block;
+    font-size: 10px;
+}
+
+.country__data-cases, .country__data-deaths {
+    height: 30px;
+    font-size: 20px;
+}
+
+.country__data-cases-text, .country__data-deaths-text {
+    position: absolute;
+    text-align: center;
+    top: 12px;
+    width: 100%;
+}
+
+.country__data svg {
+    height: 100%;
+    display: block;
+}
+
+.pixelated {
+    -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: pixelated;
+}
+
+.invisible {
+    display: none;
+}
+
+.nes-select {
+    padding: 1.5rem 0.5rem;
+}
+
+.nes-dialog {
+    width:90%;
+    top: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+#sound { 
+    position: fixed; 
+    bottom:0%;
+    right:0%;
+    background-color: #FFFFFF; 
+    z-index:10000;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+#sound-control {
+    width:50px;
+    height: 50px;
+}
+
+#anxiety-modal { 
+    position: fixed; 
+    bottom:0%;
+    left:0%;
+    background-color: #FFFFFF; 
+    z-index:10000;
+    margin-left: 10px;
+    margin-bottom: 10px;
+}
+
+#dark-mode-button .nes-badge__text {
+    width: auto;
+}
+
+.dark {
+    background-color: #212529;
+    color: #fff;
+}
+
+.dark #loading-text,
+.dark .country__data-cases-text,
+.dark .country__data-deaths-text {
+    color: #fff;
+}
+
+.dark .country__info-emoji img{
+    border-color: #fff;
+}
+
+.dark .nes-progress {
+    border-image-source: url('data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8" ?><svg version="1.1" width="5" height="5" xmlns="http://www.w3.org/2000/svg"><path d="M2 1 h1 v1 h-1 z M1 2 h1 v1 h-1 z M3 2 h1 v1 h-1 z M2 3 h1 v1 h-1 z" fill="rgb(255,255,255)" /></svg>');
+}
+
+.dark #sound,
+.dark #anxiety-modal {
+    background-color: #212529;
+}
+
+.dark #sound-control {
+    filter: invert(0.75);
+}
+
+.dark progress.nes-progress {
+    -webkit-appearance: none;
+    background-color: #212529;
+}
+
+.dark progress.nes-progress::-webkit-progress-bar {
+    background-color: #212529;
+}
+.dark progress.nes-progress::-moz-progress-bar {
+    background-color: #212529;
+}
+.dark progress.nes-progress::-ms-fill {
+    background-color: #212529;
+}
