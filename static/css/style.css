@@ -160,9 +160,3 @@ body[data-loading="false"] #loading {
 .dark progress.nes-progress::-webkit-progress-bar {
     background-color: #212529;
 }
-.dark progress.nes-progress::-moz-progress-bar {
-    background-color: #212529;
-}
-.dark progress.nes-progress::-ms-fill {
-    background-color: #212529;
-}
