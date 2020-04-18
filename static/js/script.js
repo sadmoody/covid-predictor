@@ -209,9 +209,12 @@ function updateCurrentRate(country, current_rate, rate_type='case') {
     } else if (current_rate <= (1000 * 100)) {
         caseMinuteEl.innerText = 1;
         caseRateEl.innerText = (current_rate / 1000).toFixed(2).toString() + ' seconds';
-    } else {
+    } else if (current_rate <= (1000 * 60 * 150)){
         caseMinuteEl.innerText = '1';
         caseRateEl.innerText = `${Math.round(current_rate / 1000 / 60)} minutes`;
+    } else {
+        caseMinuteEl.innerText = '1';
+        caseRateEl.innerText = `${Math.round(current_rate / 1000 / 60 / 60)} hours`;
     }
 }
 
