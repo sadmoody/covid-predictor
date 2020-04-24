@@ -15,7 +15,7 @@ def update_confirmed_stats():
     END_DATE = START_DATE + datetime.timedelta(days=14)
     GRAPH_SHAPE = poly_three
     DEGREES = 3
-    ROOT_THRESHOLD = 0.2
+    ROOT_THRESHOLD = 1.0
     date_range = pd.date_range(START_DATE, END_DATE) 
 
     logging.debug("Downloading and reading latest data")
@@ -99,7 +99,7 @@ def update_death_stats():
     END_DATE = START_DATE + datetime.timedelta(days=14)
     GRAPH_SHAPE = poly_three
     DEGREES = 3
-    ROOT_THRESHOLD = 0.2
+    ROOT_THRESHOLD = 1.0
     date_range = pd.date_range(START_DATE, END_DATE) 
 
     logging.debug("Downloading and reading latest data")
