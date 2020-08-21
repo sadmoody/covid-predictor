@@ -398,7 +398,12 @@ function build_bar(el, text_element, country, type) {
     }).then(state => {
         if (document.hasFocus())
             playAudio(audio_file_name);
-        el.value = state.x;
+        if (state.x)
+        {
+            el.value = state.x;
+        } else {
+            el.value = 0;
+        }
         build_bar(el, text_element, country, type)
     });
 };
